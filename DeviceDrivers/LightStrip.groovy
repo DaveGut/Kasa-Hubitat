@@ -513,7 +513,7 @@ def getCtHslValue(kelvin) {
 
 
 
-// ~~~~~ start include (70) davegut.kasaCommon ~~~~~
+// ~~~~~ start include (218) davegut.kasaCommon ~~~~~
 library ( // library marker davegut.kasaCommon, line 1
 	name: "kasaCommon", // library marker davegut.kasaCommon, line 2
 	namespace: "davegut", // library marker davegut.kasaCommon, line 3
@@ -795,9 +795,9 @@ def updateAttr(attr, value) { // library marker davegut.kasaCommon, line 275
 } // library marker davegut.kasaCommon, line 279
 
 
-// ~~~~~ end include (70) davegut.kasaCommon ~~~~~
+// ~~~~~ end include (218) davegut.kasaCommon ~~~~~
 
-// ~~~~~ start include (71) davegut.kasaCommunications ~~~~~
+// ~~~~~ start include (219) davegut.kasaCommunications ~~~~~
 library ( // library marker davegut.kasaCommunications, line 1
 	name: "kasaCommunications", // library marker davegut.kasaCommunications, line 2
 	namespace: "davegut", // library marker davegut.kasaCommunications, line 3
@@ -1060,9 +1060,9 @@ private inputXorTcp(resp) { // library marker davegut.kasaCommunications, line 2
 	return cmdResponse // library marker davegut.kasaCommunications, line 260
 } // library marker davegut.kasaCommunications, line 261
 
-// ~~~~~ end include (71) davegut.kasaCommunications ~~~~~
+// ~~~~~ end include (219) davegut.kasaCommunications ~~~~~
 
-// ~~~~~ start include (67) davegut.Logging ~~~~~
+// ~~~~~ start include (206) davegut.Logging ~~~~~
 library ( // library marker davegut.Logging, line 1
 	name: "Logging", // library marker davegut.Logging, line 2
 	namespace: "davegut", // library marker davegut.Logging, line 3
@@ -1118,9 +1118,9 @@ def logWarn(msg) { log.warn "${label()} ${getVer()}: ${msg}" } // library marker
 
 def logError(msg) { log.error "${label()} ${getVer()}}: ${msg}" } // library marker davegut.Logging, line 54
 
-// ~~~~~ end include (67) davegut.Logging ~~~~~
+// ~~~~~ end include (206) davegut.Logging ~~~~~
 
-// ~~~~~ start include (73) davegut.kasaLights ~~~~~
+// ~~~~~ start include (221) davegut.kasaLights ~~~~~
 library ( // library marker davegut.kasaLights, line 1
 	name: "kasaLights", // library marker davegut.kasaLights, line 2
 	namespace: "davegut", // library marker davegut.kasaLights, line 3
@@ -1201,25 +1201,27 @@ def checkLevel(level) { // library marker davegut.kasaLights, line 69
 } // library marker davegut.kasaLights, line 78
 
 def setLightOnOff(onOff, transTime = 0) { // library marker davegut.kasaLights, line 80
-	transTime = checkTransTime(transTime) // library marker davegut.kasaLights, line 81
-	sendCmd("""{"${service()}":{"${method()}":{"on_off":${onOff},""" + // library marker davegut.kasaLights, line 82
-			""""transition_period":${transTime}}}}""") // library marker davegut.kasaLights, line 83
-} // library marker davegut.kasaLights, line 84
+	state.eventType = "digital" // library marker davegut.kasaLights, line 81
+	transTime = checkTransTime(transTime) // library marker davegut.kasaLights, line 82
+	sendCmd("""{"${service()}":{"${method()}":{"on_off":${onOff},""" + // library marker davegut.kasaLights, line 83
+			""""transition_period":${transTime}}}}""") // library marker davegut.kasaLights, line 84
+} // library marker davegut.kasaLights, line 85
 
-def setLightLevel(level, transTime = 0) { // library marker davegut.kasaLights, line 86
-	level = checkLevel(level) // library marker davegut.kasaLights, line 87
-	if (level == 0) { // library marker davegut.kasaLights, line 88
-		setLightOnOff(0, transTime) // library marker davegut.kasaLights, line 89
-	} else { // library marker davegut.kasaLights, line 90
-		transTime = checkTransTime(transTime) // library marker davegut.kasaLights, line 91
-		sendCmd("""{"${service()}":{"${method()}":{"ignore_default":1,"on_off":1,""" + // library marker davegut.kasaLights, line 92
-				""""brightness":${level},"transition_period":${transTime}}}}""") // library marker davegut.kasaLights, line 93
-	} // library marker davegut.kasaLights, line 94
-} // library marker davegut.kasaLights, line 95
+def setLightLevel(level, transTime = 0) { // library marker davegut.kasaLights, line 87
+	state.eventType = "digital" // library marker davegut.kasaLights, line 88
+	level = checkLevel(level) // library marker davegut.kasaLights, line 89
+	if (level == 0) { // library marker davegut.kasaLights, line 90
+		setLightOnOff(0, transTime) // library marker davegut.kasaLights, line 91
+	} else { // library marker davegut.kasaLights, line 92
+		transTime = checkTransTime(transTime) // library marker davegut.kasaLights, line 93
+		sendCmd("""{"${service()}":{"${method()}":{"ignore_default":1,"on_off":1,""" + // library marker davegut.kasaLights, line 94
+				""""brightness":${level},"transition_period":${transTime}}}}""") // library marker davegut.kasaLights, line 95
+	} // library marker davegut.kasaLights, line 96
+} // library marker davegut.kasaLights, line 97
 
-// ~~~~~ end include (73) davegut.kasaLights ~~~~~
+// ~~~~~ end include (221) davegut.kasaLights ~~~~~
 
-// ~~~~~ start include (69) davegut.kasaColorLights ~~~~~
+// ~~~~~ start include (217) davegut.kasaColorLights ~~~~~
 library ( // library marker davegut.kasaColorLights, line 1
 	name: "kasaColorLights", // library marker davegut.kasaColorLights, line 2
 	namespace: "davegut", // library marker davegut.kasaColorLights, line 3
@@ -1330,9 +1332,9 @@ def bulbPresetSet(psName, transTime = transition_Time) { // library marker daveg
 	} // library marker davegut.kasaColorLights, line 108
 } // library marker davegut.kasaColorLights, line 109
 
-// ~~~~~ end include (69) davegut.kasaColorLights ~~~~~
+// ~~~~~ end include (217) davegut.kasaColorLights ~~~~~
 
-// ~~~~~ start include (72) davegut.kasaEnergyMonitor ~~~~~
+// ~~~~~ start include (220) davegut.kasaEnergyMonitor ~~~~~
 library ( // library marker davegut.kasaEnergyMonitor, line 1
 	name: "kasaEnergyMonitor", // library marker davegut.kasaEnergyMonitor, line 2
 	namespace: "davegut", // library marker davegut.kasaEnergyMonitor, line 3
@@ -1605,4 +1607,4 @@ def getMonthstat(year) { // library marker davegut.kasaEnergyMonitor, line 261
 	} // library marker davegut.kasaEnergyMonitor, line 270
 } // library marker davegut.kasaEnergyMonitor, line 271
 
-// ~~~~~ end include (72) davegut.kasaEnergyMonitor ~~~~~
+// ~~~~~ end include (220) davegut.kasaEnergyMonitor ~~~~~

@@ -4,36 +4,20 @@ License:  https://github.com/DaveGut/HubitatActive/blob/master/KasaDevices/Licen
 ===== Link to Documentation =====
 	https://github.com/DaveGut/HubitatActive/blob/master/KasaDevices/Documentation.pdf
 
-Version 2.3.8a
+Version 2.4.1
 	ISSUES
-	1.	Some devices are not found on LAN using UDP - but still work via Kasa phone app
-		and Hubitat (if IP is correct).  Sencond discovery sometimes alleviates this.
-	2.	IP Ping pong caused by lan discovery not finding erroneous device (due to devices
-		data not reset.
+	1.	Devices events need to produce "physical" for when the switch is turned on
+		Manually or through the Kasa App.
+		Limitation:  Poll interval must meet business case to use the external activation
+		for rules.
 	OBJECTIVE:  Improve installation process to simplify and improve chances of user
 				successfully installing all devices.  Make the cloud option	perfectly 
 				clear to user.
 	FIXES:
-	a.	Added option to enter Kasa credentials on startPage.
-	b.	Find Devices.
-		1.  Zero state.devices as first step.  
-		2.  If the credentials are set (valid token), Find devices will find via UDP AND
-			CLOUD to capture missing devices.
-		3.	During find process, will not send data to parse if a LAN device has already
-			been discovered.
-	c.	Add Devices Page.  Provide ist of all found devices.  Also has access to immediately 
-		do an addition Find Devices (without resetting devices data).
-	d.	RemoveDevices: Modified to not rely on state.devices.  Uses getChildDevices only.
-	e.	Device Configure (app method).  Automatically completes two find devices runs to
-		assure all devices are found.
-	f.	Other cleanups to accommodate the Fixes and streamline the app options.
-		1.	Modified: startPage, addDevicesPage, configureChildren, findDevices, getToken,
-			kasaAuthenticationPage.
-		2.	Removed: lanAddDevicesPage, manAddDevicesPage, manAddStart, cloudAddDevicesPage,
-			cloudAddStart, listDevices, listDevicesByIp, listDevicesByName, getDeviceList,
-			runLanTest, lanTestParse, lanTestResult, schedGetToken, startGetToken
-		3.	Moved: kasaAuthenticationPage to startPage, commsTest to startPage.
-		4.	Change logging to common library Logging.
+	a.	Add state.eventType so that it is "digital" for Hubitat commanded Switch and
+		Switch level commands and "physical" for refresh detected changes.
+	b.	Add device page:  Add note on new Kasa devices that are not compatible with
+		the XOR integration and require the Community Tapo Integration.
 ===================================================================================================*/
 //	=====	NAMESPACE	============
 def nameSpace() { return "davegut" }
@@ -63,8 +47,8 @@ preferences {
 	page(name: "addDevStatus")
 	page(name: "kasaAuthenticationPage")
 	page(name: "removeDevicesPage")
-	page(name: "commsTest")
-	page(name: "commsTestDisplay")
+//	page(name: "commsTest")
+//	page(name: "commsTestDisplay")
 }
 
 def installed() { updated() }
@@ -176,11 +160,12 @@ def startPage() {
 			href "addDevicesPage",
 				title: "<b>Scan LAN for Kasa devices and add</b>",
 				description: "Primary Method to discover and add devices."
-			
-//			def desc = "<b>Requires two factor authentication is disabled in Kasa App.</b>"
+			String authPage = "<b>Not required for Normal Installations</b>. Use only "
+			authPage += "if above SCAN fails to discover devices. Requires two factor "
+			authPage += "authentication being disabled in Kasa App."
 			href "kasaAuthenticationPage",
 				title: "<b>Set / Update Cloud Credentials (OPTIONAL)</b>",
-				description: "<b>Requires two factor authentication is disabled in Kasa App.</b>"
+				description: authPage
 			paragraph "<b>Current Kasa Token</b>: ${kasaToken}" 
 			
 			href "removeDevicesPage",
@@ -190,8 +175,8 @@ def startPage() {
 			input "logEnable", "bool",
 				   title: "<b>Debug logging</b>",
 				   submitOnChange: true
-			href "commsTest", title: "<b>IP Comms Ping Test Tool</b>",
-				description: "Select for Ping Test Page."
+//			href "commsTest", title: "<b>IP Comms Ping Test Tool</b>",
+//				description: "Select for Ping Test Page."
 		}
 	}
 }
@@ -241,6 +226,10 @@ def addDevicesPage() {
 					   title: "Add Kasa Devices to Hubitat",
 					   nextPage: addDevStatus,
 					   install: false) {
+		String newProtDevs = "<b>Some Kasa device models and old models with new hardware versions "
+		newProtDevs += "are not discovered by this Application.</b>  These devices are likely supported "
+		newProtDevs += "by the TP-LINK Tapo community integration located at: "
+		newProtDevs += "https://community.hubitat.com/t/release-tp-link-tapo-plug-switch-bulb-hub-and-robovac-integration"
 	 	section() {
 			input ("selectedAddDevices", "enum",
 				   required: false,
@@ -250,6 +239,7 @@ def addDevicesPage() {
 				   description: "Use the dropdown to select devices.  Then select 'Done'.",
 				   options: uninstalledDevices)
 			paragraph "<b>Found Devices: (Alias: Ip:Port, Strength, Installed?)</b>\r<p style='font-size:14px'>${theList}</p>"
+			paragraph newProtDevs
 			href "addDevicesPage",
 				title: "<b>Rescan for Additional Kasa Devices</b>",
 				description: "<b>Perform scan again to try to capture missing devices.</b>"
@@ -339,7 +329,8 @@ def kasaAuthenticationPage() {
 						nextPage: startPage,
                         install: false) {
 		def note = "You only need to enter your Kasa credentials and get a token " +
-			"if LAN discovery could not find all devices. " +
+			"if LAN discovery could not find all devices. <b>Recommend not using this " +
+			"unless absolutely necessary.</b>" +
 			"\na.\tEnter the credentials and get a token" +
 			"\nb.\tRun Install Kasa Devices" +
 			"\nc.\tTo stop using the cloud, simply zero out the username or password."
@@ -669,7 +660,9 @@ def removeDevices() {
 	logInfo(logData)
 }
 
-def commsTest() {
+
+////////////////////////////
+def xxxxcommsTest() {
 	logInfo("commsTest")
 	return dynamicPage(name:"commsTest",
 					   title: "IP Communications Test",
@@ -707,8 +700,8 @@ def commsTest() {
 		}
 	}
 }
-
-def commsTestDisplay() {
+///////////////////////////
+def xxxxcommsTestDisplay() {
 	logDebug("commsTestDisplay: [routerIp: ${routerIp}, nonKasaIp: ${nonKasaIp}, kasaDevices: ${pingKasaDevices}]")
 	def pingResults = []
 	def pingResult
@@ -746,8 +739,8 @@ def commsTestDisplay() {
 		}
 	}
 }
-
-def sendPing(ip, count = 3) {
+///////////////////////////
+def xxxxsendPing(ip, count = 3) {
 	hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(ip, count)
 	def success = "nullResults"
 	def minTime = "n/a"
@@ -985,7 +978,7 @@ private String convertHexToIP(hex) {
 
 private Integer convertHexToInt(hex) { Integer.parseInt(hex,16) }
 
-// ~~~~~ start include (67) davegut.Logging ~~~~~
+// ~~~~~ start include (206) davegut.Logging ~~~~~
 library ( // library marker davegut.Logging, line 1
 	name: "Logging", // library marker davegut.Logging, line 2
 	namespace: "davegut", // library marker davegut.Logging, line 3
@@ -1041,4 +1034,4 @@ def logWarn(msg) { log.warn "${label()} ${getVer()}: ${msg}" } // library marker
 
 def logError(msg) { log.error "${label()} ${getVer()}}: ${msg}" } // library marker davegut.Logging, line 54
 
-// ~~~~~ end include (67) davegut.Logging ~~~~~
+// ~~~~~ end include (206) davegut.Logging ~~~~~

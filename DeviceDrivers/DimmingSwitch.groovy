@@ -206,7 +206,7 @@ def startLevelChange(direction) {
 }
 
 def stopLevelChange() {
-	logDebug("startLevelChange: [level: ${device.currentValue("level")}]")
+	logDebug("stopLevelChange: [level: ${device.currentValue("level")}]")
 	unschedule(levelUp)
 	unschedule(levelDown)
 }
@@ -237,11 +237,11 @@ def setSysInfo(status) {
 	def onOff = "on"
 	if (switchStatus == 0) { onOff = "off" }
 	if (device.currentValue("switch") != onOff) {
-		sendEvent(name: "switch", value: onOff, type: "digital")
+		sendEvent(name: "switch", value: onOff, type: state.eventType)
 		logData << [switch: onOff]
 	}
 	if (device.currentValue("level") != status.brightness) {
-		sendEvent(name: "level", value: status.brightness, type: "digital")
+		sendEvent(name: "level", value: status.brightness, type: state.eventType)
 		logData << [level: status.brightness]
 	}
 	def ledStatus = status.led_off
@@ -258,6 +258,7 @@ def setSysInfo(status) {
 	if (nameSync == "device") {
 		updateName(status)
 	}
+	state.eventType = "physical"
 }
 
 def checkTransTime(transTime) {
@@ -285,6 +286,7 @@ def checkLevel(level) {
 }
 
 def setDimmerTransition(level, transTime) {
+	state.eventType = "digital"
 	level = checkLevel(level)
 	transTime = checkTransTime(transTime)
 	logDebug("setDimmerTransition: [level: ${level}, transTime: ${transTime}]")
@@ -297,6 +299,7 @@ def setDimmerTransition(level, transTime) {
 }
 
 def presetBrightness(level) {
+	state.eventType = "digital"
 	level = checkLevel(level)
 	logDebug("presetLevel: [level: ${level}]")
 	sendCmd("""{"smartlife.iot.dimmer":{"set_brightness":{"brightness":${level}}},""" +
@@ -314,7 +317,7 @@ def getDimmerConfiguration() {
 
 
 
-// ~~~~~ start include (70) davegut.kasaCommon ~~~~~
+// ~~~~~ start include (218) davegut.kasaCommon ~~~~~
 library ( // library marker davegut.kasaCommon, line 1
 	name: "kasaCommon", // library marker davegut.kasaCommon, line 2
 	namespace: "davegut", // library marker davegut.kasaCommon, line 3
@@ -596,9 +599,9 @@ def updateAttr(attr, value) { // library marker davegut.kasaCommon, line 275
 } // library marker davegut.kasaCommon, line 279
 
 
-// ~~~~~ end include (70) davegut.kasaCommon ~~~~~
+// ~~~~~ end include (218) davegut.kasaCommon ~~~~~
 
-// ~~~~~ start include (71) davegut.kasaCommunications ~~~~~
+// ~~~~~ start include (219) davegut.kasaCommunications ~~~~~
 library ( // library marker davegut.kasaCommunications, line 1
 	name: "kasaCommunications", // library marker davegut.kasaCommunications, line 2
 	namespace: "davegut", // library marker davegut.kasaCommunications, line 3
@@ -861,9 +864,9 @@ private inputXorTcp(resp) { // library marker davegut.kasaCommunications, line 2
 	return cmdResponse // library marker davegut.kasaCommunications, line 260
 } // library marker davegut.kasaCommunications, line 261
 
-// ~~~~~ end include (71) davegut.kasaCommunications ~~~~~
+// ~~~~~ end include (219) davegut.kasaCommunications ~~~~~
 
-// ~~~~~ start include (67) davegut.Logging ~~~~~
+// ~~~~~ start include (206) davegut.Logging ~~~~~
 library ( // library marker davegut.Logging, line 1
 	name: "Logging", // library marker davegut.Logging, line 2
 	namespace: "davegut", // library marker davegut.Logging, line 3
@@ -919,9 +922,9 @@ def logWarn(msg) { log.warn "${label()} ${getVer()}: ${msg}" } // library marker
 
 def logError(msg) { log.error "${label()} ${getVer()}}: ${msg}" } // library marker davegut.Logging, line 54
 
-// ~~~~~ end include (67) davegut.Logging ~~~~~
+// ~~~~~ end include (206) davegut.Logging ~~~~~
 
-// ~~~~~ start include (74) davegut.kasaPlugs ~~~~~
+// ~~~~~ start include (222) davegut.kasaPlugs ~~~~~
 library ( // library marker davegut.kasaPlugs, line 1
 	name: "kasaPlugs", // library marker davegut.kasaPlugs, line 2
 	namespace: "davegut", // library marker davegut.kasaPlugs, line 3
@@ -973,18 +976,19 @@ def distResp(response) { // library marker davegut.kasaPlugs, line 18
 } // library marker davegut.kasaPlugs, line 49
 
 def setRelayState(onOff) { // library marker davegut.kasaPlugs, line 51
-	logDebug("setRelayState: [switch: ${onOff}]") // library marker davegut.kasaPlugs, line 52
-	if (getDataValue("plugNo") == null) { // library marker davegut.kasaPlugs, line 53
-		sendCmd("""{"system":{"set_relay_state":{"state":${onOff}}}}""") // library marker davegut.kasaPlugs, line 54
-	} else { // library marker davegut.kasaPlugs, line 55
-		sendCmd("""{"context":{"child_ids":["${getDataValue("plugId")}"]},""" + // library marker davegut.kasaPlugs, line 56
-				""""system":{"set_relay_state":{"state":${onOff}}}}""") // library marker davegut.kasaPlugs, line 57
-	} // library marker davegut.kasaPlugs, line 58
-} // library marker davegut.kasaPlugs, line 59
+	state.eventType = "digital" // library marker davegut.kasaPlugs, line 52
+	logDebug("setRelayState: [switch: ${onOff}]") // library marker davegut.kasaPlugs, line 53
+	if (getDataValue("plugNo") == null) { // library marker davegut.kasaPlugs, line 54
+		sendCmd("""{"system":{"set_relay_state":{"state":${onOff}}}}""") // library marker davegut.kasaPlugs, line 55
+	} else { // library marker davegut.kasaPlugs, line 56
+		sendCmd("""{"context":{"child_ids":["${getDataValue("plugId")}"]},""" + // library marker davegut.kasaPlugs, line 57
+				""""system":{"set_relay_state":{"state":${onOff}}}}""") // library marker davegut.kasaPlugs, line 58
+	} // library marker davegut.kasaPlugs, line 59
+} // library marker davegut.kasaPlugs, line 60
 
-def setLedOff(onOff) { // library marker davegut.kasaPlugs, line 61
-	logDebug("setLedOff: [ledOff: ${onOff}]") // library marker davegut.kasaPlugs, line 62
-		sendCmd("""{"system":{"set_led_off":{"off":${onOff}}}}""") // library marker davegut.kasaPlugs, line 63
-} // library marker davegut.kasaPlugs, line 64
+def setLedOff(onOff) { // library marker davegut.kasaPlugs, line 62
+	logDebug("setLedOff: [ledOff: ${onOff}]") // library marker davegut.kasaPlugs, line 63
+		sendCmd("""{"system":{"set_led_off":{"off":${onOff}}}}""") // library marker davegut.kasaPlugs, line 64
+} // library marker davegut.kasaPlugs, line 65
 
-// ~~~~~ end include (74) davegut.kasaPlugs ~~~~~
+// ~~~~~ end include (222) davegut.kasaPlugs ~~~~~
