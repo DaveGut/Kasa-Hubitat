@@ -51,6 +51,11 @@ preferences {
 //	page(name: "commsTestDisplay")
 }
 
+void hubStartupHandler() {
+	startPage()
+	findDevices(60)
+}
+
 def installed() { updated() }
 
 def updated() {
@@ -183,7 +188,7 @@ def startPage() {
 
 def addDevicesPage() {
 	logDebug("addDevicesPage")
-	def action = findDevices(10)
+	def action = findDevices(20)
 	runIn(5, updateChildren)
 	def devices = state.devices
 	def uninstalledDevices = [:]
@@ -403,7 +408,7 @@ def getCloudUrl() {
 	return logData
 }
 
-def findDevices(timeout = 5) {
+def findDevices(timeout = 10) {
 	def start = state.hostArray.min().toInteger()
 	def finish = state.hostArray.max().toInteger() + 1
 	def await
@@ -978,7 +983,7 @@ private String convertHexToIP(hex) {
 
 private Integer convertHexToInt(hex) { Integer.parseInt(hex,16) }
 
-// ~~~~~ start include (206) davegut.Logging ~~~~~
+// ~~~~~ start include (288) davegut.Logging ~~~~~
 library ( // library marker davegut.Logging, line 1
 	name: "Logging", // library marker davegut.Logging, line 2
 	namespace: "davegut", // library marker davegut.Logging, line 3
@@ -1034,4 +1039,4 @@ def logWarn(msg) { log.warn "${label()} ${getVer()}: ${msg}" } // library marker
 
 def logError(msg) { log.error "${label()} ${getVer()}}: ${msg}" } // library marker davegut.Logging, line 54
 
-// ~~~~~ end include (206) davegut.Logging ~~~~~
+// ~~~~~ end include (288) davegut.Logging ~~~~~
