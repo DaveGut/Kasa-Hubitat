@@ -4,20 +4,26 @@ License:  https://github.com/DaveGut/HubitatActive/blob/master/KasaDevices/Licen
 ===== Link to Documentation =====
 	https://github.com/DaveGut/HubitatActive/blob/master/KasaDevices/Documentation.pdf
 
-Version 2.4.1
-	ISSUES
-	1.	Devices events need to produce "physical" for when the switch is turned on
-		Manually or through the Kasa App.
-		Limitation:  Poll interval must meet business case to use the external activation
-		for rules.
-	OBJECTIVE:  Improve installation process to simplify and improve chances of user
-				successfully installing all devices.  Make the cloud option	perfectly 
-				clear to user.
-	FIXES:
-	a.	Add state.eventType so that it is "digital" for Hubitat commanded Switch and
-		Switch level commands and "physical" for refresh detected changes.
-	b.	Add device page:  Add note on new Kasa devices that are not compatible with
-		the XOR integration and require the Community Tapo Integration.
+==	Version 2.4.2c
+Issues resolved:
+a.	Comms error.  Attribute "commsError" not resetting. 
+	== Resolved: Added internal UDP timeout (since Hub function appears not to work).
+b.	Cloud control. Cloud control not working (Kasa has migrated server to Tapo server).
+	== Resolved:  Removed Cloud access from integration. Modified device data update
+				  triggered on Hub reboot.
+c.	User confusion on which intergration to use given new API in some devices.
+	== Resolved:  Provide list of new user API devices on Add Devices page.
+d.	LAN Issues. Kasa devices not discovered. Usually caused by either LAN issue,
+	device issues, or device busy when polling.
+	== Resolved:  Existing try again function on discovery page. Added note to
+				  exercise device before trying again.
+Continued Issue: LAN issues due to factors outside of Hubitat implementation.
+1.	User LAN topology / security isolating device from Hub.
+2.	Older routers temporarily "drop" LAN devices (usually when total devices
+	exceed 20 or so).
+3.	Interference from other connections to physical devices. (Kasa devices
+	appear to ignore incoming UDP messages when a message is being processed.
+	The more connections to the device, the higher probability.
 ===================================================================================================*/
 //	=====	NAMESPACE	============
 def nameSpace() { return "davegut" }
@@ -45,15 +51,12 @@ preferences {
 	page(name: "startPage")
 	page(name: "addDevicesPage")
 	page(name: "addDevStatus")
-	page(name: "kasaAuthenticationPage")
 	page(name: "removeDevicesPage")
-//	page(name: "commsTest")
-//	page(name: "commsTestDisplay")
 }
 
 void hubStartupHandler() {
 	startPage()
-	findDevices(60)
+	findDevices(30)
 }
 
 def installed() { updated() }
@@ -62,24 +65,14 @@ def updated() {
 	logInfo("updated: Updating device configurations and (if cloud enabled) Kasa Token")
 	app.updateSetting("logEnable", [type:"bool", value: false])
 	app?.updateSetting("appSetup", [type:"bool", value: false])
-	app?.removeSetting("utilities")
-	app?.removeSetting("pingKasaDevices")
-	app?.removeSetting("devAddresses")
-	app?.removeSetting("devPort")
-	state.remove("lanTest")
 	state.remove("addedDevices")
 	state.remove("failedAdds")
-	state.remove("initialFind")
-	app?.removeSetting("altInstall")
 	scheduleChecks()
 }
 
 def scheduleChecks() {
 	unschedule()
 	configureEnable()
-	if (kasaToken && kasaToken != "INVALID") {
-		schedule("0 30 2 ? * MON,WED,SAT", getToken)
-	}
 }
 
 def uninstalled() {
@@ -95,7 +88,8 @@ def initInstance() {
 	app.updateSetting("infoLog", true)
 	app.updateSetting("logEnable", false)
 	runIn(900, debugLogOff)
-	state.devices = [:]
+	if (!state.devices) { state.devices = [:] }
+	cleanData()
 	if (!lanSegment) {
 		def hub = location.hub
 		def hubIpArray = hub.localIP.split('\\.')
@@ -109,6 +103,18 @@ def initInstance() {
 		app?.updateSetting("hostLimits", [type:"string", value: "1, 254"])
 	}
 	startPage()
+}
+
+def cleanData() {
+	state.tapoDevices = []
+	Map newDevices = [:]
+	state.devices.each {
+		def isChild = getChildDevice(it.value.dni)
+		if (isChild) {
+			newDevices << it
+		}
+	}
+	state.devices = newDevices
 }
 
 def startPage() {
@@ -164,14 +170,7 @@ def startPage() {
 
 			href "addDevicesPage",
 				title: "<b>Scan LAN for Kasa devices and add</b>",
-				description: "Primary Method to discover and add devices."
-			String authPage = "<b>Not required for Normal Installations</b>. Use only "
-			authPage += "if above SCAN fails to discover devices. Requires two factor "
-			authPage += "authentication being disabled in Kasa App."
-			href "kasaAuthenticationPage",
-				title: "<b>Set / Update Cloud Credentials (OPTIONAL)</b>",
-				description: authPage
-			paragraph "<b>Current Kasa Token</b>: ${kasaToken}" 
+				description: "Discover and add Kasa IOT devices."
 			
 			href "removeDevicesPage",
 				title: "<b>Remove Kasa Devices</b>",
@@ -180,16 +179,14 @@ def startPage() {
 			input "logEnable", "bool",
 				   title: "<b>Debug logging</b>",
 				   submitOnChange: true
-//			href "commsTest", title: "<b>IP Comms Ping Test Tool</b>",
-//				description: "Select for Ping Test Page."
 		}
 	}
 }
 
 def addDevicesPage() {
 	logDebug("addDevicesPage")
-	def action = findDevices(20)
-	runIn(5, updateChildren)
+	def action = findDevices(10, true)
+	
 	def devices = state.devices
 	def uninstalledDevices = [:]
 	def requiredDrivers = [:]
@@ -201,40 +198,13 @@ def addDevicesPage() {
 		}
 	}
 	uninstalledDevices.sort()
-	def reqDrivers = []
-	requiredDrivers.each {
-		reqDrivers << it.key
-	}
-	
-	def deviceList = []
-	if (devices == null) {
-		deviceList << "<b>No Devices in devices.</b>]"
-	} else {
-		devices.each{
-			def dni = it.key
-			def result = ["Failed", "n/a"]
-			def installed = "No"
-			def isChild = getChildDevice(it.key)
-			if (isChild) {
-				installed = "Yes"
-			}
-			deviceList << "<b>${it.value.alias}</b>: ${it.value.ip}:${it.value.port}, ${it.value.rssi}, ${installed}"
-		}
-	}
-	deviceList.sort()
-	def theList = ""
-	deviceList.each {
-		theList += "${it}\n"
-	}
-
+	def tapoDevices = state.tapoDevices
+	def tapoDevList = ""
+	tapoDevices.each { tapoDevList += "${it}\n" }
 	return dynamicPage(name:"addDevicesPage",
 					   title: "Add Kasa Devices to Hubitat",
 					   nextPage: addDevStatus,
 					   install: false) {
-		String newProtDevs = "<b>Some Kasa device models and old models with new hardware versions "
-		newProtDevs += "are not discovered by this Application.</b>  These devices are likely supported "
-		newProtDevs += "by the TP-LINK Tapo community integration located at: "
-		newProtDevs += "https://community.hubitat.com/t/release-tp-link-tapo-plug-switch-bulb-hub-and-robovac-integration"
 	 	section() {
 			input ("selectedAddDevices", "enum",
 				   required: false,
@@ -243,11 +213,18 @@ def addDevicesPage() {
 				   "Total Devices: ${devices.size()}",
 				   description: "Use the dropdown to select devices.  Then select 'Done'.",
 				   options: uninstalledDevices)
-			paragraph "<b>Found Devices: (Alias: Ip:Port, Strength, Installed?)</b>\r<p style='font-size:14px'>${theList}</p>"
-			paragraph newProtDevs
+			if (tapoDevices && tapoDevices.size() > 0) {
+				def tapoNote = "<b>Found Tapo Protocol Devices.</b>.  The below Kasa devices "
+				tapoNote += "can't be installed via this integration.  The community "
+				tapoNote += "TP-LInk Tapo Integration will likely support these devices. "
+				tapoNote += "\n<p style='font-size:14px'>${tapoDevList}</p>"
+				paragraph(tapoNote)
+			}
+			def desTxt = "Recommend you exercise missing devices through Kasa/Tapo phone "
+			desTxt += "app and then retry discovery of devices not on list."
 			href "addDevicesPage",
 				title: "<b>Rescan for Additional Kasa Devices</b>",
-				description: "<b>Perform scan again to try to capture missing devices.</b>"
+				description: desTxt
 		}
 	}
 }
@@ -271,7 +248,6 @@ def addDevStatus() {
 			failMsg += "\t${it}\n"
 		}
 	}
-		
 	return dynamicPage(name:"addDeviceStatus",
 					   title: "Installation Status",
 					   nextPage: startPage,
@@ -327,93 +303,12 @@ def addDevices() {
 	app?.removeSetting("selectedAddDevices")
 }
 
-def kasaAuthenticationPage() {
-	logInfo([method: "kasaAuthenticationPage"])
-	return dynamicPage (name: "kasaAuthenticationPage", 
-    					title: "Initial Kasa Login Page",
-						nextPage: startPage,
-                        install: false) {
-		def note = "You only need to enter your Kasa credentials and get a token " +
-			"if LAN discovery could not find all devices. <b>Recommend not using this " +
-			"unless absolutely necessary.</b>" +
-			"\na.\tEnter the credentials and get a token" +
-			"\nb.\tRun Install Kasa Devices" +
-			"\nc.\tTo stop using the cloud, simply zero out the username or password."
-		section("Enter Kasa Account Credentials: ${note}") {
-			input ("userName", "email",
-            		title: "<b>TP-Link Kasa Email Address</b>", 
-                    required: false,
-                    submitOnChange: true)
-			input ("userPassword", "password",
-            		title: "<b>TP-Link Kasa Account Password</b>",
-                    required: false,
-                    submitOnChange: true)
-			if (userName && userPassword) {
-				def await = getToken("kasaAuthenticationPage")
-			} else {
-				app?.updateSetting("kasaToken", "INVALID")
-			}
-			paragraph "<b>Current Kasa Token</b>: ${kasaToken}" 
-		}
-	}
-}
-
-def getToken(source = "scheduled") {
-	Map logData = [method: "getToken", source: source]
-	def termId = java.util.UUID.randomUUID()
-	def cmdBody = [
-		method: "login",
-		params: [
-			appType: "Kasa_Android",
-			cloudUserName: "${userName}",
-			cloudPassword: "${userPassword.replaceAll('&gt;', '>').replaceAll('&lt;','<')}",
-			terminalUUID: "${termId}"]]
-	cmdData = [uri: "https://wap.tplinkcloud.com",
-			   cmdBody: cmdBody]
-	def respData = sendKasaCmd(cmdData)
-	if (respData.error_code == 0) {
-		token = respData.result.token
-		logData << [newTokenLength: token.length()]
-		app?.updateSetting("kasaToken", respData.result.token)
-		if (!kasaCloudUrl) {
-			logData << getCloudUrl()
-		}
-	} else {
-		app?.updateSetting("kasaToken", "INVALID")
-		logData << [updateFailed: respData]
-		logWarn(logData)
-		if (source == "scheduled") {
-			runIn(600, getToken)
-		}
-	}
-	logInfo(logData)
-	pauseExecution(2000)
-	return
-}
-
-def getCloudUrl() {
-	Map logData = [method: "getCloudUrl"]
-	def cmdData = [uri: "https://wap.tplinkcloud.com?token=${kasaToken}", 
-				   cmdBody: [method: "getDeviceList"]]
-	def respData = sendKasaCmd(cmdData)
-	if (respData.error_code == 0) {
-		def cloudDevices = respData.result.deviceList
-		def cloudUrl = cloudDevices[0].appServerUrl
-		logData << [kasaCloudUrl: cloudUrl]
-		app?.updateSetting("kasaCloudUrl", cloudUrl)
-	} else {
-		logData << [error: "Devices not returned from Kasa Cloud", data: respData]
-		logWarn(logData)
-	}
-	return logData
-}
-
-def findDevices(timeout = 10) {
+def findDevices(timeout = 10, findTapo = false) {
 	def start = state.hostArray.min().toInteger()
 	def finish = state.hostArray.max().toInteger() + 1
 	def await
 	logDebug([method: "findDevices", hostArray: state.hostArray, portArray: state.portArray, 
-			 pollSegment: state.segArray, timeout: timeout])
+			 pollSegment: state.segArray, timeout: timeout, findTapo: findTapo])
 	state.portArray.each {
 		def port = it.trim()
 		List deviceIPs = []
@@ -424,21 +319,20 @@ def findDevices(timeout = 10) {
 				deviceIPs.add("${pollSegment}.${i.toString()}")
 			}
 			logInfo([method: "findDevices", activity: "sendLanCmd", segment: pollSegment, port: port])
-			await = sendLanCmd("${pollSegment}.255", port, """{"system":{"get_sysinfo":{}}}""", "parseWakeup", 5, true)
-			pauseExecution(5000)
-			await = sendLanCmd(deviceIPs.join(','), port, """{"system":{"get_sysinfo":{}}}""", "getLanData", timeout)
+			def xorCmd = outputXOR("""{"system":{"get_sysinfo":{}}}""")
+			await = sendLanCmd(deviceIPs.join(','), port, xorCmd, "getLanData", timeout)
 			pauseExecution(1000*(timeout + 1))
+			if (findTapo == true) {
+				//	Note this currently only finds non-battery powered Tapo devices (bat devices use port 20004).
+				def cmdData = "0200000101e51100095c11706d6f58577b22706172616d73223a7b227273615f6b6579223a222d2d2d2d2d424547494e205055424c4943204b45592d2d2d2d2d5c6e4d494942496a414e42676b71686b6947397730424151454641414f43415138414d49494243674b43415145416d684655445279687367797073467936576c4d385c6e54646154397a61586133586a3042712f4d6f484971696d586e2b736b4e48584d525a6550564134627532416257386d79744a5033445073665173795679536e355c6e6f425841674d303149674d4f46736350316258367679784d523871614b33746e466361665a4653684d79536e31752f564f2f47474f795436507459716f384e315c6e44714d77373563334b5a4952387a4c71516f744657747239543337536e50754a7051555a7055376679574b676377716e7338785a657a78734e6a6465534171765c6e3167574e75436a5356686d437931564d49514942576d616a37414c47544971596a5442376d645348562f2b614a32564467424c6d7770344c7131664c4f6a466f5c6e33737241683144744a6b537376376a624f584d51695666453873764b6877586177717661546b5658382f7a4f44592b2f64684f5374694a4e6c466556636c35585c6e4a514944415141425c6e2d2d2d2d2d454e44205055424c4943204b45592d2d2d2d2d5c6e227d7d"
+				await = sendLanCmd(deviceIPs.join(','), "20002", cmdData, "getTapoLanData", 5)
+				pauseExecution(10000)
+			}
 		}
 	}
-	pauseExecution(5000)
-	if (kasaToken && kasaToken != "INVALID") {
-		logInfo([method: "findDevices", activity: "cloudGetDevices"])
-		await = cloudGetDevices()
-	}
+	runIn(10, updateChildren)
 	return
 }
-
-def parseWakeup(response) { logInfo([method: "parseWakeup"]) }
 
 def getLanData(response) {
 	if (response instanceof Map) {
@@ -463,67 +357,7 @@ def getLanData(response) {
 	}
 }
 
-def cloudGetDevices() {
-	Map logData = [method: "cloudGetDevices"]
-	def message = ""
-	def cmdData = [uri: "https://wap.tplinkcloud.com?token=${kasaToken}", 
-				   cmdBody: [method: "getDeviceList"]]
-	def respData = sendKasaCmd(cmdData)
-	def cloudDevices
-	def cloudUrl
-	if (respData.error_code == 0) {
-		cloudDevices = respData.result.deviceList
-		cloudUrl = ""
-	} else {
-		message = "Devices not returned from Kasa Cloud."
-		logData << [error: message, data: respData]
-		logWarn(logData)
-		return
-	}
-	Map devices = state.devices
-	cloudDevices.each { childDev ->
-		def devData = devices.find { it.value.deviceId == childDev.deviceId }
-		if (devData && devData.value.deviceId == childDev.deviceId) {
-			logDebug([ignoredDevice: childDev.deviceMac, reason: "already in array"])
-		} else if (childDev.deviceType != "IOT.SMARTPLUGSWITCH" &&
-				   childDev.deviceType != "IOT.SMARTBULB" && 
-				   childDev.deviceType != "IOT.IPCAMERA") {
-			logDebug([ignoredDevice: childDev.deviceMac, reason: "unsupported deviceType"])
-		} else if (childDev.status == 0) {
-			logDebug([ignoredDevice: childDev.deviceMac, reason: "not controllable via cloud"])
-		} else {
-			cloudUrl = childDev.appServerUrl
-			def cmdBody = [
-				method: "passthrough",
-				params: [
-					deviceId: childDev.deviceId,
-					requestData: """{"system":{"get_sysinfo":{}}}"""]]
-			cmdData = [uri: "${cloudUrl}/?token=${kasaToken}",
-					   cmdBody: cmdBody]
-			def cmdResp
-			respData = sendKasaCmd(cmdData)
-			if (respData.error_code == 0) {
-				def jsonSlurper = new groovy.json.JsonSlurper()
-				cmdResp = jsonSlurper.parseText(respData.result.responseData).system.get_sysinfo
-				if (cmdResp.system) {
-					cmdResp = cmdResp.system
-				}
-///////////////////
-				def await = parseDeviceData(cmdResp)
-			}
-		}
-	}
-	logData << [status: "added cloud-only devices"]
-	if (cloudUrl != "" && cloudUrl != kasaCloudUrl) {
-		app?.updateSetting("kasaCloudUrl", cloudUrl)
-		logData << [kasaCloudUrl: cloudUrl]
-	}
-	logDebug(logData)
-//	pauseExecution(2000)
-	return
-}
-
-def parseDeviceData(cmdResp, ip = "CLOUD", port = "CLOUD") {
+def parseDeviceData(cmdResp, ip, port) {
 	def logData = [method: "parseDeviceData"]
 	def dni
 	if (cmdResp.mic_mac) {
@@ -626,6 +460,52 @@ def createDevice(dni, ip, port, rssi, type, feature, model, alias, deviceId, plu
 	return device
 }
 
+def getTapoLanData(response) {
+	List tapoDevices = []
+	if (response instanceof Map) {
+		def lanData = parseTapoLanData(response)
+		if (!lanData.status) {
+			tapoDevices << lanData
+		}
+	} else {
+		devices = state.devices
+		response.each {
+			def lanData = parseTapoLanData(it)
+			if (!lanData.status) {
+				tapoDevices << lanData
+			}
+		}
+	}
+	state.tapoDevices = tapoDevices
+}
+
+def parseTapoLanData(response) {
+	Map devData = [:]
+	def respData = parseLanMessage(response.description)
+	if (respData.type == "LAN_TYPE_UDPCLIENT") {
+		byte[] payloadByte = hubitat.helper.HexUtils.hexStringToByteArray(respData.payload.drop(32)) 
+		String payloadString = new String(payloadByte)
+		if (payloadString.length() > 1007) {
+			payloadString = payloadString + """"}}}"""
+		}
+		Map payload = new JsonSlurper().parseText(payloadString).result
+		List supported = ["SMART.KASAHUB", "SMART.KASAPLUG", "SMART.KASASWITCH", "SMART.KASAENERGY"]
+		String devType = payload.device_type
+		String model = payload.device_model
+		String devIp = payload.ip
+		String dni = payload.mac.replaceAll("-", "")
+		if (supported.contains(devType)) {
+			devData = [ip: devIp, type: devType, model: model, dni: dni]
+		} else {
+			devData = [status: "Tapo Device", ip: devIp, model: model]
+		}
+	} else {
+		devData = [status: "LAN Data Error"]
+		logDebug(devData)
+	}
+	return devData
+}
+
 def removeDevicesPage() {
 	Map logData = [method: "removeDevicesPage"]
 	def installedDevices = [:]
@@ -665,100 +545,6 @@ def removeDevices() {
 	logInfo(logData)
 }
 
-
-////////////////////////////
-def xxxxcommsTest() {
-	logInfo("commsTest")
-	return dynamicPage(name:"commsTest",
-					   title: "IP Communications Test",
-					   nextPage: startPage,
-					   install: false) {
-	 	section() {
-			def note = "This test measures ping from this Hub to any device on your  " +
-				"LAN (wifi and connected). You enter your Router's IP address, a " +
-				"non-Kasa device (other hub if you have one), and select the Kasa " +
-				"devices to ping. (Each ping will take about 3 seconds)."
-			paragraph note
-			input "routerIp", "string",
-				title: "<b>IP Address of your Router</b>",
-				required: false,
-				submitOnChange: true
-			input "nonKasaIp", "string",
-				title: "<b>IP Address of non-Kasa LAN device (other Hub?)</b>",
-				required: false,
-				submitOnChange: true
-
-			def devices = state.devices
-			def kasaDevices = [:]
-			devices.each {
-				kasaDevices["${it.value.dni}"] = "${it.value.alias}, ${it.value.ip}"
- 			}
-			input ("pingKasaDevices", "enum",
-				   required: false,
-				   multiple: true,
-				   title: "Kasa devices to ping (${kasaDevices.size() ?: 0} available).",
-				   description: "Use the dropdown to select devices.",
-				   options: kasaDevices)
-			paragraph "Test will take approximately 5 seconds per device."
-			href "commsTestDisplay", title: "<b>Ping Selected Devices</b>",
-				description: "Click to Test IP Comms."
-		}
-	}
-}
-///////////////////////////
-def xxxxcommsTestDisplay() {
-	logDebug("commsTestDisplay: [routerIp: ${routerIp}, nonKasaIp: ${nonKasaIp}, kasaDevices: ${pingKasaDevices}]")
-	def pingResults = []
-	def pingResult
-	if (routerIp != null) {
-		pingResult = sendPing(routerIp, 5)
-		pingResults << "<b>Router</b>: ${pingResult}"
-	}
-	if (nonKasaIp != null) {
-		pingResult = sendPing(nonKasaIp, 5)
-		pingResults << "<b>nonKasaDevice</b>: ${pingResult}"
-	}
-	def devices = state.devices
-	if (pingKasaDevices != null) {
-		pingKasaDevices.each {dni ->
-			def device = devices.find { it.value.dni == dni }
-			pingResult = sendPing(device.value.ip, 5)
-			pingResults << "<b>${device.value.alias}</b>: ${pingResult}"
-		}
-	}
-	def pingList = ""
-	pingResults.each {
-		pingList += "${it}\n"
-	}
-	return dynamicPage(name:"commsTestDisplay",
-					   title: "Ping Testing Result",
-					   nextPage: commsTest,
-					   install: false) {
-		section() {
-			def note = "<b>Expectations</b>:\na.\tAll devices have similar ping results." +
-				"\nb.\tAll pings are less than 1000 ms.\nc.\tSuccess is 100." +
-				"\nIf not, test again to verify bad results." +
-				"\nAll times are in ms. Success is percent of 5 total tests."
-			paragraph note
-			paragraph "<p style='font-size:14px'>${pingList}</p>"
-		}
-	}
-}
-///////////////////////////
-def xxxxsendPing(ip, count = 3) {
-	hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(ip, count)
-	def success = "nullResults"
-	def minTime = "n/a"
-	def maxTime = "n/a"
-	if (pingData) {
-		success = (100 * pingData.packetsReceived.toInteger()  / count).toInteger()
-		minTime = pingData.rttMin
-		maxTime = pingData.rttMax
-	}
-	def pingResult = [ip: ip, min: minTime, max: maxTime, success: success]
-	return pingResult
-}
-
 def updateConfigurations() {
 	Map logData = [method: "updateConfiguration", configureEnabled: configureEnabled]
 	if (configureEnabled) {
@@ -780,7 +566,7 @@ def configureEnable() {
 
 def configureChildren() {
 	state.devices = [:]
-	def await = findDevices(10)
+	def await = findDevices(5)
 	runIn(2, updateChildren)
 }
 
@@ -792,12 +578,10 @@ def updateChildren() {
 		Map childData = [:]
 		def device = devices.find { it.value.dni == childDev.getDeviceNetworkId() }
 		if (device == null) {
-			if (childDev.getDataValue("deviceIP") != "CLOUD") {
-				childDev.updateAttr("commsError", "true")
-				childData << [commsError: "true"]
-			} else {
-				childData << [status: "No update. CLOUD Device."]
-			}
+			logData << [error: "Child device not found in local database", 
+						action:  "remove device or resolve LAN issue",
+						note: "See integration documentation."]
+			logWarn(logData)
 		} else {
 			childDev.updateAttr("commsError", "false")
 			childData << [commsError: "false"]
@@ -876,7 +660,7 @@ def coordinate(cType, coordData, deviceId, plugNo) {
 
 private sendLanCmd(ip, port, command, action, commsTo = 5, ignore = false) {
 	def myHubAction = new hubitat.device.HubAction(
-		outputXOR(command),
+		command,
 		hubitat.device.Protocol.LAN,
 		[type: hubitat.device.HubAction.Type.LAN_TYPE_UDPCLIENT,
 		 destinationAddress: "${ip}:${port}",
@@ -948,42 +732,13 @@ private inputXOR(encrResponse) {
 	return cmdResponse
 }
 
-def sendKasaCmd(cmdData) {
-	def commandParams = [
-		uri: cmdData.uri,
-		requestContentType: 'application/json',
-		contentType: 'application/json',
-		headers: ['Accept':'application/json; version=1, */*; q=0.01'],
-		body : new groovy.json.JsonBuilder(cmdData.cmdBody).toString()
-	]
-	def respData
-	try {
-		httpPostJson(commandParams) {resp ->
-			if (resp.status == 200) {
-				respData = resp.data
-			} else {
-				def msg = "sendKasaCmd: <b>HTTP Status not equal to 200.  Protocol error.  "
-				msg += "HTTP Protocol Status = ${resp.status}"
-				logWarn(msg)
-				respData = [error_code: resp.status, msg: "HTTP Protocol Error"]
-			}
-		}
-	} catch (e) {
-		def msg = "sendKasaCmd: <b>Error in Cloud Communications.</b> The Kasa Cloud is unreachable."
-		msg += "\nAdditional Data: Error = ${e}\n\n"
-		logWarn(msg)
-		respData = [error_code: 9999, msg: e]
-	}
-	return respData
-}
-
 private String convertHexToIP(hex) {
 	[convertHexToInt(hex[0..1]),convertHexToInt(hex[2..3]),convertHexToInt(hex[4..5]),convertHexToInt(hex[6..7])].join(".")
 }
 
 private Integer convertHexToInt(hex) { Integer.parseInt(hex,16) }
 
-// ~~~~~ start include (288) davegut.Logging ~~~~~
+// ~~~~~ start include (325) davegut.Logging ~~~~~
 library ( // library marker davegut.Logging, line 1
 	name: "Logging", // library marker davegut.Logging, line 2
 	namespace: "davegut", // library marker davegut.Logging, line 3
@@ -1039,4 +794,4 @@ def logWarn(msg) { log.warn "${label()} ${getVer()}: ${msg}" } // library marker
 
 def logError(msg) { log.error "${label()} ${getVer()}}: ${msg}" } // library marker davegut.Logging, line 54
 
-// ~~~~~ end include (288) davegut.Logging ~~~~~
+// ~~~~~ end include (325) davegut.Logging ~~~~~
