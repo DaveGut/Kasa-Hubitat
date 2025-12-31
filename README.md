@@ -15,7 +15,4 @@ Released for Hubitat Version 2.4.4a.  Changes:
 
 
 ## Instructions:  
-
-https://github.com/DaveGut/HubitatActive/blob/master/KasaDevices/Docs/Install.pdf
-
-
+https://github.com/DaveGut/Kasa-Hubitat/blob/main/KasaTapoIntegrationApp.pdf
