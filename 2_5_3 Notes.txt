@@ -1,0 +1,77 @@
+New release: 2.5.3 includes updated devices and protocols with a general cleanup to merge Tapo and Kasa functionality into a single integration.
+
+Issues resolved:
+1.	Integration did not support new Kasa Repackaged devices using tapo API and protocol.
+2.	Risk of Kasa (TP-Link) removing XOR protocol from devices in favor of 
+Tapo (KLAP) protocol).
+3.	Devices not compatible with Hubitat Color Animation.
+
+Open issues:
+A.	Legacy (HW V 1) HS300 UDP truncation requires that the user limit the name length for the 6 devices.
+B.	The deprecated Tapo AES Protocol is not tested.
+C.	Tapo P100 plug has firmware error that causes LED updates to fail.
+
+Added Plugs, Switches, Bulbs, and Lights:
+1)	Kasa devices using tapo API and/or protocol (KLAP)
+2)	Tapo devices not connected through an independent Kasa or Tapo hub.
+
+User Functionality Changes:
+3)	Removed command setPollInterval in favor of Preference poll interval.
+4)	Combined and updated preferences. Removed Manual IP, Manual Port and Reboot device preferences.
+5)	Added function setLightWithTransition to support rule-machine sending
+on/off and setColor commands with instance specific transition time.
+6)	Added function to automatically transition from legacy api/protocol to new system is legacy fails.
+7)	Added preference that allows user to manually transition to the new protocol (and back if the transition does not work).
+
+Application Changes:
+a.	Added Setup Application and Credentials Pages (must be done for enhanced features to work, otherwise optional).
+b.	Added selectable help text to start page and setup application pages.
+c.	Added discovery of tapo api and/or protocol devices if credentials have been entered.
+
+Transition Notes:
+A)	At the beginning of the logs, there may be some message like the following. These are due to the transition changing the methods but a scheduled action occurred. "org.codehaus.groovy.runtime.metaclass.MissingMethodExceptionNoStack: No signature of method: user_driver_davegut_Kasa_Plug_Switch_2716.poll() is applicable for argument types: () values: []
+Possible solutions: off(), on(), iotPoll(), wait(), run(), run() (method poll)"
+B)	Each device will have two warning messages that tell the user to check devices and explain that an IP update was not part of this transition.
+
+Staff notes
+Overview: Integration is going from single api (IOT) and single protocol (XOR over UDP) to two api's (IOT and SMART) and three protocols (XOR plus KLAP/AES over HTTP). Aside from the AES protocol, the changes are required to keep the integration viable for Kasa devices with the bonus of adding Tapo devices. To change are driving this:
+a.	Some new Kasa devices using the Tapo SMART/KLAP system. Examples are the KS240 (fan/light switch), KS205, KS225, HS100, HS220, EP25, EP40)
+b.	The apparent transition of new legacy IOT/XOR devices to IOT/KLAP devices. This is occurring on a rapid pace to a dual protocol stage (driver supports both protocols). Risk is they may later convert to a single path (IPT/KLAP system). I currently have about 4 device types that have transitioned.
+Implementing TAPO devices was simply adding a list of device types to check during discovery and allow.
+
+Notes:
+1.	App and each driver has String nameSpace() { return "davegut" } at the top area of code.
+2.	App and Drivers have same names as current (avoids confusion?)
+3.	Added drivers "Kasa Parent", and three Kasa child drivers.
+4.	Changed future multi-plug installation to be via Parent-child devices (reduces communications to device and collisions at device while executing commands on multiple children at the same time).
+4.	Modified hubStartup Handler to change states, and data for new driver.
+5.	Added method to update Device Driver data for legacy devices to be consistent with new drivers. Run by hubStartupHandler.
+6.	Implemented a method for users to test the other protocol. It only changes dataValues protocol and baseUrl, so the user can return if the test does not work.
+Randomized poll interval scheduling to preclude all polls clustered in the same minute after an application discovery activity.
+8.	The Integration is NOT designed to transition community integration Tapo devices to this integration.
+9.	All final app and driver files were reviewed by Microsoft CoPilot, updated, reverified, and the re-reviewed in an iterative process until I was satisfied of preparedness for release.
+10.	Testing. After final code, tested 10 transition activity and tested all functionality at least 3 times.
+
+
+New custom Command
+/*	Custom command to support apps and rule machine providing
+	color and onOff commands a custom transition time. Also
+	supports color_temp and level.
+	Ranges:
+		a.	hue/saturation: 0 to 100
+		b.	color_temp: 2700 to 6500
+		c.	level: 5 - 100 (0 level causes error in these devices.
+		d.	rate: 0 - 10000 msec
+		e.	onOff: 0, 1
+	Operation notes.
+		1.	currentValue are default for rate, level, hue, and saturation is
+			data values are not in inputParams
+		2.	onOff = 0 will turn off using rate and ignoring all other data.
+		3.	a valid color_temp will set color temp and ignore hue/saturation
+	Valid format examples (other formats are not guaranteed to work as expected).
+		a)	colorTrans: [rate: 1000, level: 55, hue: 22, saturation: 55]
+		b)	colorTempTrans: [rate: 1000, level: 55, color_temp: 4000]
+		c)	levelTrans: [rate: 1000, level, 55]
+	
+*/
+
