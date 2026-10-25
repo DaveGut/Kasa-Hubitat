@@ -517,7 +517,7 @@ def waitForDevData(secs) {
 
 
 
-// ~~~~~ start include (1039) tpLink.tpl_app_xor ~~~~~
+// ~~~~~ start include (1068) tpLink.tpl_app_xor ~~~~~
 library (  // library marker tpLink.tpl_app_xor, line 1
 	name: "tpl_app_xor", // library marker tpLink.tpl_app_xor, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_app_xor, line 3
@@ -711,9 +711,9 @@ void updateXorChild(respData) { // library marker tpLink.tpl_app_xor, line 176
 	} // library marker tpLink.tpl_app_xor, line 191
 } // library marker tpLink.tpl_app_xor, line 192
 
-// ~~~~~ end include (1039) tpLink.tpl_app_xor ~~~~~
+// ~~~~~ end include (1068) tpLink.tpl_app_xor ~~~~~
 
-// ~~~~~ start include (1040) tpLink.tpl_app_secure ~~~~~
+// ~~~~~ start include (1069) tpLink.tpl_app_secure ~~~~~
 library (  // library marker tpLink.tpl_app_secure, line 1
 	name: "tpl_app_secure", // library marker tpLink.tpl_app_secure, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_app_secure, line 3
@@ -1031,9 +1031,9 @@ void parseAesResp(resp, devData) { // library marker tpLink.tpl_app_secure, line
 	} // library marker tpLink.tpl_app_secure, line 315
 } // library marker tpLink.tpl_app_secure, line 316
 
-// ~~~~~ end include (1040) tpLink.tpl_app_secure ~~~~~
+// ~~~~~ end include (1069) tpLink.tpl_app_secure ~~~~~
 
-// ~~~~~ start include (1056) tpLink.tpl_prot_klap ~~~~~
+// ~~~~~ start include (1081) tpLink.tpl_prot_klap ~~~~~
 library ( // library marker tpLink.tpl_prot_klap, line 1
 	name: "tpl_prot_klap", // library marker tpLink.tpl_prot_klap, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_prot_klap, line 3
@@ -1287,9 +1287,9 @@ def klapDecrypt(cipherResponse, encKey, encIv, seqNo) { // library marker tpLink
 	return new String(byteResponse, "UTF-8") // library marker tpLink.tpl_prot_klap, line 251
 } // library marker tpLink.tpl_prot_klap, line 252
 
-// ~~~~~ end include (1056) tpLink.tpl_prot_klap ~~~~~
+// ~~~~~ end include (1081) tpLink.tpl_prot_klap ~~~~~
 
-// ~~~~~ start include (1055) tpLink.tpl_prot_aes ~~~~~
+// ~~~~~ start include (1080) tpLink.tpl_prot_aes ~~~~~
 library ( // library marker tpLink.tpl_prot_aes, line 1
 	name: "tpl_prot_aes", // library marker tpLink.tpl_prot_aes, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_prot_aes, line 3
@@ -1473,9 +1473,9 @@ def aesDecrypt(cipherResponse, encKey, encIv) { // library marker tpLink.tpl_pro
 	return new String(cipher.doFinal(decodedBytes), "UTF-8") // library marker tpLink.tpl_prot_aes, line 181
 } // library marker tpLink.tpl_prot_aes, line 182
 
-// ~~~~~ end include (1055) tpLink.tpl_prot_aes ~~~~~
+// ~~~~~ end include (1080) tpLink.tpl_prot_aes ~~~~~
 
-// ~~~~~ start include (1057) tpLink.tpl_prot_xor_udp ~~~~~
+// ~~~~~ start include (1082) tpLink.tpl_prot_xor_udp ~~~~~
 library ( // library marker tpLink.tpl_prot_xor_udp, line 1
 	name: "tpl_prot_xor_udp", // library marker tpLink.tpl_prot_xor_udp, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_prot_xor_udp, line 3
@@ -1617,9 +1617,9 @@ private String inputXOR(String encryptedResponse) { // library marker tpLink.tpl
     return decrypted.toString() // library marker tpLink.tpl_prot_xor_udp, line 139
 } // library marker tpLink.tpl_prot_xor_udp, line 140
 
-// ~~~~~ end include (1057) tpLink.tpl_prot_xor_udp ~~~~~
+// ~~~~~ end include (1082) tpLink.tpl_prot_xor_udp ~~~~~
 
-// ~~~~~ start include (1059) tpLink.tpl_id_logs ~~~~~
+// ~~~~~ start include (1084) tpLink.tpl_id_logs ~~~~~
 library ( // library marker tpLink.tpl_id_logs, line 1
 	name: "tpl_id_logs", // library marker tpLink.tpl_id_logs, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_id_logs, line 3
@@ -1658,9 +1658,9 @@ def logDebug(msg) { if (logEnable) { log.debug msg } } // library marker tpLink.
 
 void logWarn(String msg) { log.warn msg } // library marker tpLink.tpl_id_logs, line 37
 
-// ~~~~~ end include (1059) tpLink.tpl_id_logs ~~~~~
+// ~~~~~ end include (1084) tpLink.tpl_id_logs ~~~~~
 
-// ~~~~~ start include (1060) tpLink.tpl_encode ~~~~~
+// ~~~~~ start include (1083) tpLink.tpl_encode ~~~~~
 library ( // library marker tpLink.tpl_encode, line 1
 	name: "tpl_encode", // library marker tpLink.tpl_encode, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_encode, line 3
@@ -1717,4 +1717,4 @@ private Integer convertHexToInt(String hex) { // library marker tpLink.tpl_encod
     return Integer.parseInt(hex, 16) // library marker tpLink.tpl_encode, line 54
 } // library marker tpLink.tpl_encode, line 55
 
-// ~~~~~ end include (1060) tpLink.tpl_encode ~~~~~
+// ~~~~~ end include (1083) tpLink.tpl_encode ~~~~~

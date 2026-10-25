@@ -122,7 +122,7 @@ def parse_system(devData) {
 
 
 
-// ~~~~~ start include (1045) tpLink.tpl_cap_switch ~~~~~
+// ~~~~~ start include (1074) tpLink.tpl_cap_switch ~~~~~
 library ( // library marker tpLink.tpl_cap_switch, line 1
 	name: "tpl_cap_switch", // library marker tpLink.tpl_cap_switch, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_cap_switch, line 3
@@ -202,9 +202,9 @@ def setIotOnOff(onOff) { // library marker tpLink.tpl_cap_switch, line 53
 	if (emEnable) { runIn(5, iotGetRealtime) } // library marker tpLink.tpl_cap_switch, line 77
 } // library marker tpLink.tpl_cap_switch, line 78
 
-// ~~~~~ end include (1045) tpLink.tpl_cap_switch ~~~~~
+// ~~~~~ end include (1074) tpLink.tpl_cap_switch ~~~~~
 
-// ~~~~~ start include (1046) tpLink.tpl_cap_level ~~~~~
+// ~~~~~ start include (1075) tpLink.tpl_cap_level ~~~~~
 library ( // library marker tpLink.tpl_cap_level, line 1
 	name: "tpl_cap_level", // library marker tpLink.tpl_cap_level, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_cap_level, line 3
@@ -415,9 +415,9 @@ def iotQuickLevel(level) { // library marker tpLink.tpl_cap_level, line 200
 	} // library marker tpLink.tpl_cap_level, line 208
 } // library marker tpLink.tpl_cap_level, line 209
 
-// ~~~~~ end include (1046) tpLink.tpl_cap_level ~~~~~
+// ~~~~~ end include (1075) tpLink.tpl_cap_level ~~~~~
 
-// ~~~~~ start include (1042) tpLink.tpl_cap_color ~~~~~
+// ~~~~~ start include (1071) tpLink.tpl_cap_color ~~~~~
 library ( // library marker tpLink.tpl_cap_color, line 1
 	name: "tpl_cap_color", // library marker tpLink.tpl_cap_color, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_cap_color, line 3
@@ -549,9 +549,9 @@ def setLightWithTransition(inputs) { // library marker tpLink.tpl_cap_color, lin
 	logDebug(logData) // library marker tpLink.tpl_cap_color, line 129
 } // library marker tpLink.tpl_cap_color, line 130
 
-// ~~~~~ end include (1042) tpLink.tpl_cap_color ~~~~~
+// ~~~~~ end include (1071) tpLink.tpl_cap_color ~~~~~
 
-// ~~~~~ start include (1043) tpLink.tpl_cap_ct ~~~~~
+// ~~~~~ start include (1072) tpLink.tpl_cap_ct ~~~~~
 library ( // library marker tpLink.tpl_cap_ct, line 1
 	name: "tpl_cap_ct", // library marker tpLink.tpl_cap_ct, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_cap_ct, line 3
@@ -592,9 +592,9 @@ def setColorTemperature(colorTemp, level=device.currentValue("level"), transSecs
 	logDebug(logData) // library marker tpLink.tpl_cap_ct, line 38
 } // library marker tpLink.tpl_cap_ct, line 39
 
-// ~~~~~ end include (1043) tpLink.tpl_cap_ct ~~~~~
+// ~~~~~ end include (1072) tpLink.tpl_cap_ct ~~~~~
 
-// ~~~~~ start include (1044) tpLink.tpl_cap_em ~~~~~
+// ~~~~~ start include (1073) tpLink.tpl_cap_em ~~~~~
 library ( // library marker tpLink.tpl_cap_em, line 1
 	name: "tpl_cap_em", // library marker tpLink.tpl_cap_em, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_cap_em, line 3
@@ -779,9 +779,9 @@ def parse_emeter(devData) { // library marker tpLink.tpl_cap_em, line 146
 	logDebug(logData) // library marker tpLink.tpl_cap_em, line 182
 } // library marker tpLink.tpl_cap_em, line 183
 
-// ~~~~~ end include (1044) tpLink.tpl_cap_em ~~~~~
+// ~~~~~ end include (1073) tpLink.tpl_cap_em ~~~~~
 
-// ~~~~~ start include (1050) tpLink.tpl_dev_common ~~~~~
+// ~~~~~ start include (1076) tpLink.tpl_dev_common ~~~~~
 library ( // library marker tpLink.tpl_dev_common, line 1
 	name: "tpl_dev_common", // library marker tpLink.tpl_dev_common, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_dev_common, line 3
@@ -840,41 +840,41 @@ def commonUpdated() { // library marker tpLink.tpl_dev_common, line 45
 	return updStatus // library marker tpLink.tpl_dev_common, line 56
 } // library marker tpLink.tpl_dev_common, line 57
 
-def changeProtocol() { // library marker tpLink.tpl_dev_common, line 59
-	Map respData = [:] // library marker tpLink.tpl_dev_common, line 60
-	device.updateSetting("changeProt", [type: "bool", value: false]) // library marker tpLink.tpl_dev_common, line 61
-	String warnTxt = "<b>changeProtocol: You have chosen to change the protocol. This may be " // library marker tpLink.tpl_dev_common, line 62
-	warnTxt += "used as a part of troubleshooting. THIS ACTION IS REVERSIBLE BY SELECTING " // library marker tpLink.tpl_dev_common, line 63
-	warnTxt += "CHANGE PROTOCOL again. Allow 20 seconds before testing.</b>" // library marker tpLink.tpl_dev_common, line 64
-	log.warn warnTxt // library marker tpLink.tpl_dev_common, line 65
-	def baseUrl = getDataValue("baseUrl") // library marker tpLink.tpl_dev_common, line 66
-	if (getDataValue("protocol") == "xor") { // library marker tpLink.tpl_dev_common, line 67
-		def (ip, port) = baseUrl.tokenize(':') // library marker tpLink.tpl_dev_common, line 68
-		String newBaseUrl = "http://${ip}:80/app" // library marker tpLink.tpl_dev_common, line 69
-		updateDataValue("protocol", "klap") // library marker tpLink.tpl_dev_common, line 70
-		updateDataValue("baseUrl", newBaseUrl) // library marker tpLink.tpl_dev_common, line 71
-		respData << [protocol: "xor -> klap", baseUrl: "${baseUrl} -> ${newBaseUrl}"] // library marker tpLink.tpl_dev_common, line 72
-	} else { // library marker tpLink.tpl_dev_common, line 73
-		String ip = baseUrl.replace("http://", "").replace(":80/app","") // library marker tpLink.tpl_dev_common, line 74
-		String newBaseUrl = "${ip}:9999" // library marker tpLink.tpl_dev_common, line 75
-		updateDataValue("protocol", "xor") // library marker tpLink.tpl_dev_common, line 76
-		updateDataValue("baseUrl", newBaseUrl) // library marker tpLink.tpl_dev_common, line 77
-		respData << [protocol: "klap -> xor", baseUrl: "${baseUrl} -> ${newBaseUrl}"] // library marker tpLink.tpl_dev_common, line 78
-	} // library marker tpLink.tpl_dev_common, line 79
-	runIn(5, configure) // library marker tpLink.tpl_dev_common, line 80
-	return [changeProtocol: respData] // library marker tpLink.tpl_dev_common, line 81
-} // library marker tpLink.tpl_dev_common, line 82
+/*	To be deleted after 2.5.3 // library marker tpLink.tpl_dev_common, line 59
+	Error on transition due to scheduled events running prior to startUpHandler. // library marker tpLink.tpl_dev_common, line 60
+	Explicitly, this was pollInterval (although others may be involved). // library marker tpLink.tpl_dev_common, line 61
+	When poll is called, update the new systemPoll setting and unschedule poll. // library marker tpLink.tpl_dev_common, line 62
+	also did same on getEnergyToday. The nightly scheduled jobs are not covered. // library marker tpLink.tpl_dev_common, line 63
+*/ // library marker tpLink.tpl_dev_common, line 64
+def poll() { // library marker tpLink.tpl_dev_common, line 65
+	unschedule() // library marker tpLink.tpl_dev_common, line 66
+	device.updateSetting("systemPoll", [type: "enum", value: pollInt]) // library marker tpLink.tpl_dev_common, line 67
+} // library marker tpLink.tpl_dev_common, line 68
+def getEnergyToday() { unschedule() } // library marker tpLink.tpl_dev_common, line 69
 
-//	===== Updates requiring handshake before completing ===== // library marker tpLink.tpl_dev_common, line 84
-def xxxxactiveUpdates() {	 // library marker tpLink.tpl_dev_common, line 85
-	Map logData = [method: "finishUpdates"] // library marker tpLink.tpl_dev_common, line 86
-	if (nameSync != "no") { // library marker tpLink.tpl_dev_common, line 87
-		logData << [syncName: syncName()] // library marker tpLink.tpl_dev_common, line 88
-	} // library marker tpLink.tpl_dev_common, line 89
-	if (ledRule != null) { // library marker tpLink.tpl_dev_common, line 90
-		logData << [ledUpdate: updateLed()] // library marker tpLink.tpl_dev_common, line 91
-	} // library marker tpLink.tpl_dev_common, line 92
-	logDebug(logData) // library marker tpLink.tpl_dev_common, line 93
+def changeProtocol() { // library marker tpLink.tpl_dev_common, line 71
+	Map respData = [:] // library marker tpLink.tpl_dev_common, line 72
+	device.updateSetting("changeProt", [type: "bool", value: false]) // library marker tpLink.tpl_dev_common, line 73
+	String warnTxt = "<b>changeProtocol: You have chosen to change the protocol. This may be " // library marker tpLink.tpl_dev_common, line 74
+	warnTxt += "used as a part of troubleshooting. THIS ACTION IS REVERSIBLE BY SELECTING " // library marker tpLink.tpl_dev_common, line 75
+	warnTxt += "CHANGE PROTOCOL again. Allow 20 seconds before testing.</b>" // library marker tpLink.tpl_dev_common, line 76
+	log.warn warnTxt // library marker tpLink.tpl_dev_common, line 77
+	def baseUrl = getDataValue("baseUrl") // library marker tpLink.tpl_dev_common, line 78
+	if (getDataValue("protocol") == "xor") { // library marker tpLink.tpl_dev_common, line 79
+		def (ip, port) = baseUrl.tokenize(':') // library marker tpLink.tpl_dev_common, line 80
+		String newBaseUrl = "http://${ip}:80/app" // library marker tpLink.tpl_dev_common, line 81
+		updateDataValue("protocol", "klap") // library marker tpLink.tpl_dev_common, line 82
+		updateDataValue("baseUrl", newBaseUrl) // library marker tpLink.tpl_dev_common, line 83
+		respData << [protocol: "xor -> klap", baseUrl: "${baseUrl} -> ${newBaseUrl}"] // library marker tpLink.tpl_dev_common, line 84
+	} else { // library marker tpLink.tpl_dev_common, line 85
+		String ip = baseUrl.replace("http://", "").replace(":80/app","") // library marker tpLink.tpl_dev_common, line 86
+		String newBaseUrl = "${ip}:9999" // library marker tpLink.tpl_dev_common, line 87
+		updateDataValue("protocol", "xor") // library marker tpLink.tpl_dev_common, line 88
+		updateDataValue("baseUrl", newBaseUrl) // library marker tpLink.tpl_dev_common, line 89
+		respData << [protocol: "klap -> xor", baseUrl: "${baseUrl} -> ${newBaseUrl}"] // library marker tpLink.tpl_dev_common, line 90
+	} // library marker tpLink.tpl_dev_common, line 91
+	runIn(5, configure) // library marker tpLink.tpl_dev_common, line 92
+	return [changeProtocol: respData] // library marker tpLink.tpl_dev_common, line 93
 } // library marker tpLink.tpl_dev_common, line 94
 
 def updateLed() { // library marker tpLink.tpl_dev_common, line 96
@@ -1287,9 +1287,9 @@ def verUpdate_2_5_3() { // library marker tpLink.tpl_dev_common, line 407
 	logInfo(respData) // library marker tpLink.tpl_dev_common, line 503
 } // library marker tpLink.tpl_dev_common, line 504
 
-// ~~~~~ end include (1050) tpLink.tpl_dev_common ~~~~~
+// ~~~~~ end include (1076) tpLink.tpl_dev_common ~~~~~
 
-// ~~~~~ start include (1054) tpLink.tpl_api_smart ~~~~~
+// ~~~~~ start include (1079) tpLink.tpl_api_smart ~~~~~
 library ( // library marker tpLink.tpl_api_smart, line 1
 	name: "tpl_api_smart", // library marker tpLink.tpl_api_smart, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_api_smart, line 3
@@ -1438,9 +1438,9 @@ def distSmartData(devResp) { // library marker tpLink.tpl_api_smart, line 112
 	} // library marker tpLink.tpl_api_smart, line 146
 } // library marker tpLink.tpl_api_smart, line 147
 
-// ~~~~~ end include (1054) tpLink.tpl_api_smart ~~~~~
+// ~~~~~ end include (1079) tpLink.tpl_api_smart ~~~~~
 
-// ~~~~~ start include (1053) tpLink.tpl_api_iot ~~~~~
+// ~~~~~ start include (1078) tpLink.tpl_api_iot ~~~~~
 library ( // library marker tpLink.tpl_api_iot, line 1
 	name: "tpl_api_iot", // library marker tpLink.tpl_api_iot, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_api_iot, line 3
@@ -1594,9 +1594,9 @@ void distIotData(key, devData) { // library marker tpLink.tpl_api_iot, line 108
 	} // library marker tpLink.tpl_api_iot, line 151
 } // library marker tpLink.tpl_api_iot, line 152
 
-// ~~~~~ end include (1053) tpLink.tpl_api_iot ~~~~~
+// ~~~~~ end include (1078) tpLink.tpl_api_iot ~~~~~
 
-// ~~~~~ start include (1056) tpLink.tpl_prot_klap ~~~~~
+// ~~~~~ start include (1081) tpLink.tpl_prot_klap ~~~~~
 library ( // library marker tpLink.tpl_prot_klap, line 1
 	name: "tpl_prot_klap", // library marker tpLink.tpl_prot_klap, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_prot_klap, line 3
@@ -1850,9 +1850,9 @@ def klapDecrypt(cipherResponse, encKey, encIv, seqNo) { // library marker tpLink
 	return new String(byteResponse, "UTF-8") // library marker tpLink.tpl_prot_klap, line 251
 } // library marker tpLink.tpl_prot_klap, line 252
 
-// ~~~~~ end include (1056) tpLink.tpl_prot_klap ~~~~~
+// ~~~~~ end include (1081) tpLink.tpl_prot_klap ~~~~~
 
-// ~~~~~ start include (1055) tpLink.tpl_prot_aes ~~~~~
+// ~~~~~ start include (1080) tpLink.tpl_prot_aes ~~~~~
 library ( // library marker tpLink.tpl_prot_aes, line 1
 	name: "tpl_prot_aes", // library marker tpLink.tpl_prot_aes, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_prot_aes, line 3
@@ -2036,9 +2036,9 @@ def aesDecrypt(cipherResponse, encKey, encIv) { // library marker tpLink.tpl_pro
 	return new String(cipher.doFinal(decodedBytes), "UTF-8") // library marker tpLink.tpl_prot_aes, line 181
 } // library marker tpLink.tpl_prot_aes, line 182
 
-// ~~~~~ end include (1055) tpLink.tpl_prot_aes ~~~~~
+// ~~~~~ end include (1080) tpLink.tpl_prot_aes ~~~~~
 
-// ~~~~~ start include (1057) tpLink.tpl_prot_xor_udp ~~~~~
+// ~~~~~ start include (1082) tpLink.tpl_prot_xor_udp ~~~~~
 library ( // library marker tpLink.tpl_prot_xor_udp, line 1
 	name: "tpl_prot_xor_udp", // library marker tpLink.tpl_prot_xor_udp, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_prot_xor_udp, line 3
@@ -2180,9 +2180,9 @@ private String inputXOR(String encryptedResponse) { // library marker tpLink.tpl
     return decrypted.toString() // library marker tpLink.tpl_prot_xor_udp, line 139
 } // library marker tpLink.tpl_prot_xor_udp, line 140
 
-// ~~~~~ end include (1057) tpLink.tpl_prot_xor_udp ~~~~~
+// ~~~~~ end include (1082) tpLink.tpl_prot_xor_udp ~~~~~
 
-// ~~~~~ start include (1059) tpLink.tpl_id_logs ~~~~~
+// ~~~~~ start include (1084) tpLink.tpl_id_logs ~~~~~
 library ( // library marker tpLink.tpl_id_logs, line 1
 	name: "tpl_id_logs", // library marker tpLink.tpl_id_logs, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_id_logs, line 3
@@ -2221,9 +2221,9 @@ def logDebug(msg) { if (logEnable) { log.debug msg } } // library marker tpLink.
 
 void logWarn(String msg) { log.warn msg } // library marker tpLink.tpl_id_logs, line 37
 
-// ~~~~~ end include (1059) tpLink.tpl_id_logs ~~~~~
+// ~~~~~ end include (1084) tpLink.tpl_id_logs ~~~~~
 
-// ~~~~~ start include (1060) tpLink.tpl_encode ~~~~~
+// ~~~~~ start include (1083) tpLink.tpl_encode ~~~~~
 library ( // library marker tpLink.tpl_encode, line 1
 	name: "tpl_encode", // library marker tpLink.tpl_encode, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_encode, line 3
@@ -2280,9 +2280,9 @@ private Integer convertHexToInt(String hex) { // library marker tpLink.tpl_encod
     return Integer.parseInt(hex, 16) // library marker tpLink.tpl_encode, line 54
 } // library marker tpLink.tpl_encode, line 55
 
-// ~~~~~ end include (1060) tpLink.tpl_encode ~~~~~
+// ~~~~~ end include (1083) tpLink.tpl_encode ~~~~~
 
-// ~~~~~ start include (1052) tpLink.tpl_error ~~~~~
+// ~~~~~ start include (1077) tpLink.tpl_error ~~~~~
 library ( // library marker tpLink.tpl_error, line 1
 	name: "tpl_error", // library marker tpLink.tpl_error, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_error, line 3
@@ -2381,4 +2381,4 @@ def loginErrorAction() { // library marker tpLink.tpl_error, line 93
 	return action // library marker tpLink.tpl_error, line 96
 } // library marker tpLink.tpl_error, line 97
 
-// ~~~~~ end include (1052) tpLink.tpl_error ~~~~~
+// ~~~~~ end include (1077) tpLink.tpl_error ~~~~~

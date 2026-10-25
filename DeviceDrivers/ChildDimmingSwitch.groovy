@@ -66,7 +66,7 @@ def parse_get_device_info(devData) {
 
 
 
-// ~~~~~ start include (1045) tpLink.tpl_cap_switch ~~~~~
+// ~~~~~ start include (1074) tpLink.tpl_cap_switch ~~~~~
 library ( // library marker tpLink.tpl_cap_switch, line 1
 	name: "tpl_cap_switch", // library marker tpLink.tpl_cap_switch, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_cap_switch, line 3
@@ -146,9 +146,9 @@ def setIotOnOff(onOff) { // library marker tpLink.tpl_cap_switch, line 53
 	if (emEnable) { runIn(5, iotGetRealtime) } // library marker tpLink.tpl_cap_switch, line 77
 } // library marker tpLink.tpl_cap_switch, line 78
 
-// ~~~~~ end include (1045) tpLink.tpl_cap_switch ~~~~~
+// ~~~~~ end include (1074) tpLink.tpl_cap_switch ~~~~~
 
-// ~~~~~ start include (1046) tpLink.tpl_cap_level ~~~~~
+// ~~~~~ start include (1075) tpLink.tpl_cap_level ~~~~~
 library ( // library marker tpLink.tpl_cap_level, line 1
 	name: "tpl_cap_level", // library marker tpLink.tpl_cap_level, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_cap_level, line 3
@@ -359,9 +359,9 @@ def iotQuickLevel(level) { // library marker tpLink.tpl_cap_level, line 200
 	} // library marker tpLink.tpl_cap_level, line 208
 } // library marker tpLink.tpl_cap_level, line 209
 
-// ~~~~~ end include (1046) tpLink.tpl_cap_level ~~~~~
+// ~~~~~ end include (1075) tpLink.tpl_cap_level ~~~~~
 
-// ~~~~~ start include (1044) tpLink.tpl_cap_em ~~~~~
+// ~~~~~ start include (1073) tpLink.tpl_cap_em ~~~~~
 library ( // library marker tpLink.tpl_cap_em, line 1
 	name: "tpl_cap_em", // library marker tpLink.tpl_cap_em, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_cap_em, line 3
@@ -546,9 +546,9 @@ def parse_emeter(devData) { // library marker tpLink.tpl_cap_em, line 146
 	logDebug(logData) // library marker tpLink.tpl_cap_em, line 182
 } // library marker tpLink.tpl_cap_em, line 183
 
-// ~~~~~ end include (1044) tpLink.tpl_cap_em ~~~~~
+// ~~~~~ end include (1073) tpLink.tpl_cap_em ~~~~~
 
-// ~~~~~ start include (1041) tpLink.tpl_child_common ~~~~~
+// ~~~~~ start include (1070) tpLink.tpl_child_common ~~~~~
 library ( // library marker tpLink.tpl_child_common, line 1
 	name: "tpl_child_common", // library marker tpLink.tpl_child_common, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_child_common, line 3
@@ -589,9 +589,9 @@ def refresh() { // library marker tpLink.tpl_child_common, line 27
 	parent.processChildCmd(commandData) // library marker tpLink.tpl_child_common, line 38
 } // library marker tpLink.tpl_child_common, line 39
 
-// ~~~~~ end include (1041) tpLink.tpl_child_common ~~~~~
+// ~~~~~ end include (1070) tpLink.tpl_child_common ~~~~~
 
-// ~~~~~ start include (1059) tpLink.tpl_id_logs ~~~~~
+// ~~~~~ start include (1084) tpLink.tpl_id_logs ~~~~~
 library ( // library marker tpLink.tpl_id_logs, line 1
 	name: "tpl_id_logs", // library marker tpLink.tpl_id_logs, line 2
 	namespace: "tpLink", // library marker tpLink.tpl_id_logs, line 3
@@ -630,4 +630,4 @@ def logDebug(msg) { if (logEnable) { log.debug msg } } // library marker tpLink.
 
 void logWarn(String msg) { log.warn msg } // library marker tpLink.tpl_id_logs, line 37
 
-// ~~~~~ end include (1059) tpLink.tpl_id_logs ~~~~~
+// ~~~~~ end include (1084) tpLink.tpl_id_logs ~~~~~
