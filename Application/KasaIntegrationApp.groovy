@@ -59,36 +59,44 @@ void hubStartupHandler() {
 	//	the hub update for significant periods.
 	//	Method child.verUpdate_2_5_3 is in library tpl_dev_common.
 	//	Those child method will determine what to do for each version.
-	//	Note: method version() is in library tpl_id_logs
-	Map logData = [method: "hubStartupHandler", children: "updating"]
+	Map logData = [method: "hubStartupHandler", currVersion: settings.version, 
+				   newVersion: version()]
+	if (settings.version != version()) {
+		logData << [app: "updating to KasaIntegration 2.5.3",
+					devices: "updating to device version 2.5.3"]
+		verUpdate_2_5_3()
+	} else {
+		logData << [status: "no updates required"]
+	}
+	logInfo(logData)
+}
+
+def verUpdate_2_5_3() {
+	//	Update app for next run.
+	app.updateSetting("version", [type:"string", value: version()])
+	//	remove old settings
+	app.removeSetting("routerIp")
+	app.removeSetting("configureEnabled")
+	app.removeSetting("appSetup")
+	app.removeSetting("hostLimits")
+	app?.updateSetting("asInst", [type:"bool", value: true])
+	app?.updateSetting("instMatter", [type:"bool", value: true])
+	app?.updateSetting("infoLog", [type:"bool", value: true])
+	//	update states
+	atomicState.iotDevices = [:]
+	atomicState.smartDevices = [:]
+	atomicState.findingSecure = false
+	atomicState.findingXor = false
+	atomicState.deviceWait = false
+	state.remove("devices")
+	state.remove("tapoDevices")
+	state.remove("hostArray")
+	state.remove("devices")
+	//	cause child devices to update
 	def children = getChildDevices()
 	children.each { child ->
 		child.verUpdate_2_5_3()
 	}
-	if (settings.version != version()) {
-		logData << [currVersion: settings.version, newVersion: version()]
-		if (version() == "2.5.3") {
-			//	remove old settings
-			app.removeSetting("routerIp")
-			app.removeSetting("configureEnabled")
-			app.removeSetting("appSetup")
-			app.removeSetting("hostLimits")
-			app?.updateSetting("asInst", [type:"bool", value: true])
-			app?.updateSetting("instMatter", [type:"bool", value: true])
-			app?.updateSetting("infoLog", [type:"bool", value: true])
-			//	update states
-			state.remove("devices")
-			state.remove("tapoDevices")
-			state.remove("hostArray")
-			state.remove("devices")
-			//	Update app for next run.
-			app.updateSetting("version", [type:"string", value: version()])
-			runIn(2, updated)
-		} else {
-			logData << [status: "no app updates required"]
-		}
-	}
-	logInfo(logData)
 }
 
 def updated() {
@@ -115,6 +123,7 @@ def uninstalled() {
 
 //	===== Start Page =====
 def startPage() {
+	if (settings.version != null) { verUpdate_2_5_3() }
 	log.info "startPage"
 	if (selectedRemoveDevices) {removeDevices()}
 	else if (selectedAddDevices) { addDevices() }

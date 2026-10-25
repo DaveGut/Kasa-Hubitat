@@ -638,446 +638,444 @@ def commonUpdated() { // library marker tpLink.tpl_dev_common, line 45
 	When poll is called, update the new systemPoll setting and unschedule poll. // library marker tpLink.tpl_dev_common, line 62
 	also did same on getEnergyToday. The nightly scheduled jobs are not covered. // library marker tpLink.tpl_dev_common, line 63
 */ // library marker tpLink.tpl_dev_common, line 64
-def poll() { // library marker tpLink.tpl_dev_common, line 65
-	unschedule() // library marker tpLink.tpl_dev_common, line 66
-	device.updateSetting("systemPoll", [type: "enum", value: pollInt]) // library marker tpLink.tpl_dev_common, line 67
-} // library marker tpLink.tpl_dev_common, line 68
-def getEnergyToday() { unschedule() } // library marker tpLink.tpl_dev_common, line 69
+def poll() { verUpdate_2_5_3() } // library marker tpLink.tpl_dev_common, line 65
+def getEnergyToday() { verUpdate_2_5_3() } // library marker tpLink.tpl_dev_common, line 66
 
-def changeProtocol() { // library marker tpLink.tpl_dev_common, line 71
-	Map respData = [:] // library marker tpLink.tpl_dev_common, line 72
-	device.updateSetting("changeProt", [type: "bool", value: false]) // library marker tpLink.tpl_dev_common, line 73
-	String warnTxt = "<b>changeProtocol: You have chosen to change the protocol. This may be " // library marker tpLink.tpl_dev_common, line 74
-	warnTxt += "used as a part of troubleshooting. THIS ACTION IS REVERSIBLE BY SELECTING " // library marker tpLink.tpl_dev_common, line 75
-	warnTxt += "CHANGE PROTOCOL again. Allow 20 seconds before testing.</b>" // library marker tpLink.tpl_dev_common, line 76
-	log.warn warnTxt // library marker tpLink.tpl_dev_common, line 77
-	def baseUrl = getDataValue("baseUrl") // library marker tpLink.tpl_dev_common, line 78
-	if (getDataValue("protocol") == "xor") { // library marker tpLink.tpl_dev_common, line 79
-		def (ip, port) = baseUrl.tokenize(':') // library marker tpLink.tpl_dev_common, line 80
-		String newBaseUrl = "http://${ip}:80/app" // library marker tpLink.tpl_dev_common, line 81
-		updateDataValue("protocol", "klap") // library marker tpLink.tpl_dev_common, line 82
-		updateDataValue("baseUrl", newBaseUrl) // library marker tpLink.tpl_dev_common, line 83
-		respData << [protocol: "xor -> klap", baseUrl: "${baseUrl} -> ${newBaseUrl}"] // library marker tpLink.tpl_dev_common, line 84
-	} else { // library marker tpLink.tpl_dev_common, line 85
-		String ip = baseUrl.replace("http://", "").replace(":80/app","") // library marker tpLink.tpl_dev_common, line 86
-		String newBaseUrl = "${ip}:9999" // library marker tpLink.tpl_dev_common, line 87
-		updateDataValue("protocol", "xor") // library marker tpLink.tpl_dev_common, line 88
-		updateDataValue("baseUrl", newBaseUrl) // library marker tpLink.tpl_dev_common, line 89
-		respData << [protocol: "klap -> xor", baseUrl: "${baseUrl} -> ${newBaseUrl}"] // library marker tpLink.tpl_dev_common, line 90
-	} // library marker tpLink.tpl_dev_common, line 91
-	runIn(5, configure) // library marker tpLink.tpl_dev_common, line 92
-	return [changeProtocol: respData] // library marker tpLink.tpl_dev_common, line 93
-} // library marker tpLink.tpl_dev_common, line 94
+def changeProtocol() { // library marker tpLink.tpl_dev_common, line 68
+	Map respData = [:] // library marker tpLink.tpl_dev_common, line 69
+	device.updateSetting("changeProt", [type: "bool", value: false]) // library marker tpLink.tpl_dev_common, line 70
+	String warnTxt = "<b>changeProtocol: You have chosen to change the protocol. This may be " // library marker tpLink.tpl_dev_common, line 71
+	warnTxt += "used as a part of troubleshooting. THIS ACTION IS REVERSIBLE BY SELECTING " // library marker tpLink.tpl_dev_common, line 72
+	warnTxt += "CHANGE PROTOCOL again. Allow 20 seconds before testing.</b>" // library marker tpLink.tpl_dev_common, line 73
+	log.warn warnTxt // library marker tpLink.tpl_dev_common, line 74
+	def baseUrl = getDataValue("baseUrl") // library marker tpLink.tpl_dev_common, line 75
+	if (getDataValue("protocol") == "xor") { // library marker tpLink.tpl_dev_common, line 76
+		def (ip, port) = baseUrl.tokenize(':') // library marker tpLink.tpl_dev_common, line 77
+		String newBaseUrl = "http://${ip}:80/app" // library marker tpLink.tpl_dev_common, line 78
+		updateDataValue("protocol", "klap") // library marker tpLink.tpl_dev_common, line 79
+		updateDataValue("baseUrl", newBaseUrl) // library marker tpLink.tpl_dev_common, line 80
+		respData << [protocol: "xor -> klap", baseUrl: "${baseUrl} -> ${newBaseUrl}"] // library marker tpLink.tpl_dev_common, line 81
+	} else { // library marker tpLink.tpl_dev_common, line 82
+		String ip = baseUrl.replace("http://", "").replace(":80/app","") // library marker tpLink.tpl_dev_common, line 83
+		String newBaseUrl = "${ip}:9999" // library marker tpLink.tpl_dev_common, line 84
+		updateDataValue("protocol", "xor") // library marker tpLink.tpl_dev_common, line 85
+		updateDataValue("baseUrl", newBaseUrl) // library marker tpLink.tpl_dev_common, line 86
+		respData << [protocol: "klap -> xor", baseUrl: "${baseUrl} -> ${newBaseUrl}"] // library marker tpLink.tpl_dev_common, line 87
+	} // library marker tpLink.tpl_dev_common, line 88
+	runIn(5, configure) // library marker tpLink.tpl_dev_common, line 89
+	return [changeProtocol: respData] // library marker tpLink.tpl_dev_common, line 90
+} // library marker tpLink.tpl_dev_common, line 91
 
-def updateLed() { // library marker tpLink.tpl_dev_common, line 96
-	if (getDataValue("api") == "smart") { // library marker tpLink.tpl_dev_common, line 97
-		List requests = [[method: "get_led_info"]] // library marker tpLink.tpl_dev_common, line 98
-		cmdBody = [method: "multipleRequest", params: [requests: requests]] // library marker tpLink.tpl_dev_common, line 99
-		sendSmartCmd(cmdBody, false) // library marker tpLink.tpl_dev_common, line 100
-	} else { // library marker tpLink.tpl_dev_common, line 101
-		int onOff = 1 // library marker tpLink.tpl_dev_common, line 102
-		if (ledRule == "on") { onOff = 0 } // library marker tpLink.tpl_dev_common, line 103
-		Map cmdBody = [system: [set_led_off: [off: onOff]]] // library marker tpLink.tpl_dev_common, line 104
-		sendIotCmd(cmdBody, false) // library marker tpLink.tpl_dev_common, line 105
-	} // library marker tpLink.tpl_dev_common, line 106
-	return ledRule // library marker tpLink.tpl_dev_common, line 107
-} // library marker tpLink.tpl_dev_common, line 108
+def updateLed() { // library marker tpLink.tpl_dev_common, line 93
+	if (getDataValue("api") == "smart") { // library marker tpLink.tpl_dev_common, line 94
+		List requests = [[method: "get_led_info"]] // library marker tpLink.tpl_dev_common, line 95
+		cmdBody = [method: "multipleRequest", params: [requests: requests]] // library marker tpLink.tpl_dev_common, line 96
+		sendSmartCmd(cmdBody, false) // library marker tpLink.tpl_dev_common, line 97
+	} else { // library marker tpLink.tpl_dev_common, line 98
+		int onOff = 1 // library marker tpLink.tpl_dev_common, line 99
+		if (ledRule == "on") { onOff = 0 } // library marker tpLink.tpl_dev_common, line 100
+		Map cmdBody = [system: [set_led_off: [off: onOff]]] // library marker tpLink.tpl_dev_common, line 101
+		sendIotCmd(cmdBody, false) // library marker tpLink.tpl_dev_common, line 102
+	} // library marker tpLink.tpl_dev_common, line 103
+	return ledRule // library marker tpLink.tpl_dev_common, line 104
+} // library marker tpLink.tpl_dev_common, line 105
 
-def parse_get_led_info(result) { // library marker tpLink.tpl_dev_common, line 110
-	//	If not the same as ledRule, update. // library marker tpLink.tpl_dev_common, line 111
-	Map logData = [method: "parse_get_led_info"] // library marker tpLink.tpl_dev_common, line 112
-	log.trace result.night_mode // library marker tpLink.tpl_dev_common, line 113
-	if (ledRule != result.led_rule) { // library marker tpLink.tpl_dev_common, line 114
-		Map params = [led_rule: ledRule] // library marker tpLink.tpl_dev_common, line 115
-		if (ledRule == "night_mode") { // library marker tpLink.tpl_dev_common, line 116
-			params << [night_mode: result.night_mode] // library marker tpLink.tpl_dev_common, line 117
-		} // library marker tpLink.tpl_dev_common, line 118
-		List requests = [[method: "set_led_info",params: params]] // library marker tpLink.tpl_dev_common, line 119
-		logData << [status: "updatingLedRule"] // library marker tpLink.tpl_dev_common, line 120
-		cmdBody = [method: "multipleRequest", params: [requests: requests]] // library marker tpLink.tpl_dev_common, line 121
-		sendSmartCmd(cmdBody, false) // library marker tpLink.tpl_dev_common, line 122
-	} // library marker tpLink.tpl_dev_common, line 123
-	logData << [ledRule: ledRule] // library marker tpLink.tpl_dev_common, line 124
-	logDebug(logData) // library marker tpLink.tpl_dev_common, line 125
-} // library marker tpLink.tpl_dev_common, line 126
+def parse_get_led_info(result) { // library marker tpLink.tpl_dev_common, line 107
+	//	If not the same as ledRule, update. // library marker tpLink.tpl_dev_common, line 108
+	Map logData = [method: "parse_get_led_info"] // library marker tpLink.tpl_dev_common, line 109
+	log.trace result.night_mode // library marker tpLink.tpl_dev_common, line 110
+	if (ledRule != result.led_rule) { // library marker tpLink.tpl_dev_common, line 111
+		Map params = [led_rule: ledRule] // library marker tpLink.tpl_dev_common, line 112
+		if (ledRule == "night_mode") { // library marker tpLink.tpl_dev_common, line 113
+			params << [night_mode: result.night_mode] // library marker tpLink.tpl_dev_common, line 114
+		} // library marker tpLink.tpl_dev_common, line 115
+		List requests = [[method: "set_led_info",params: params]] // library marker tpLink.tpl_dev_common, line 116
+		logData << [status: "updatingLedRule"] // library marker tpLink.tpl_dev_common, line 117
+		cmdBody = [method: "multipleRequest", params: [requests: requests]] // library marker tpLink.tpl_dev_common, line 118
+		sendSmartCmd(cmdBody, false) // library marker tpLink.tpl_dev_common, line 119
+	} // library marker tpLink.tpl_dev_common, line 120
+	logData << [ledRule: ledRule] // library marker tpLink.tpl_dev_common, line 121
+	logDebug(logData) // library marker tpLink.tpl_dev_common, line 122
+} // library marker tpLink.tpl_dev_common, line 123
 
-def syncName() { // library marker tpLink.tpl_dev_common, line 128
-	String status = "no update requested" // library marker tpLink.tpl_dev_common, line 129
-	switch(nameSync) { // library marker tpLink.tpl_dev_common, line 130
-		case "hubMaster": // library marker tpLink.tpl_dev_common, line 131
-			status = "update device's name to hub device name" // library marker tpLink.tpl_dev_common, line 132
-			setDeviceAlias() // library marker tpLink.tpl_dev_common, line 133
+def syncName() { // library marker tpLink.tpl_dev_common, line 125
+	String status = "no update requested" // library marker tpLink.tpl_dev_common, line 126
+	switch(nameSync) { // library marker tpLink.tpl_dev_common, line 127
+		case "hubMaster": // library marker tpLink.tpl_dev_common, line 128
+			status = "update device's name to hub device name" // library marker tpLink.tpl_dev_common, line 129
+			setDeviceAlias() // library marker tpLink.tpl_dev_common, line 130
+			break // library marker tpLink.tpl_dev_common, line 131
+		case "deviceMaster": // library marker tpLink.tpl_dev_common, line 132
+			status = "update hub device's name to device name" // library marker tpLink.tpl_dev_common, line 133
 			break // library marker tpLink.tpl_dev_common, line 134
-		case "deviceMaster": // library marker tpLink.tpl_dev_common, line 135
-			status = "update hub device's name to device name" // library marker tpLink.tpl_dev_common, line 136
-			break // library marker tpLink.tpl_dev_common, line 137
-		default:  // library marker tpLink.tpl_dev_common, line 138
-			break // library marker tpLink.tpl_dev_common, line 139
-	} // library marker tpLink.tpl_dev_common, line 140
-	return [syncName: status] // library marker tpLink.tpl_dev_common, line 141
-} // library marker tpLink.tpl_dev_common, line 142
+		default:  // library marker tpLink.tpl_dev_common, line 135
+			break // library marker tpLink.tpl_dev_common, line 136
+	} // library marker tpLink.tpl_dev_common, line 137
+	return [syncName: status] // library marker tpLink.tpl_dev_common, line 138
+} // library marker tpLink.tpl_dev_common, line 139
 
-def setDeviceAlias() { // library marker tpLink.tpl_dev_common, line 144
-	Map cmdBody = [:] // library marker tpLink.tpl_dev_common, line 145
-	if (getDataValue("api") == "iot") { // library marker tpLink.tpl_dev_common, line 146
-		if (getDataValue("plugNo") || DEV_TYPE == "Child Plug Switch") { // library marker tpLink.tpl_dev_common, line 147
-			cmdBody << [context: [child_ids:[getDataValue("deviceId")]]] // library marker tpLink.tpl_dev_common, line 148
-		} // library marker tpLink.tpl_dev_common, line 149
-		cmdBody << [system: [set_dev_alias: [alias: device.getLabel()]]] // library marker tpLink.tpl_dev_common, line 150
-		if (IS_CHILD) { // library marker tpLink.tpl_dev_common, line 151
-			Map commandData = [cmdBody: cmdBody, retry: true, devId: getDataValue("deviceId"),  // library marker tpLink.tpl_dev_common, line 152
-						   	   dni: device.deviceNetworkId, api: "iot"] // library marker tpLink.tpl_dev_common, line 153
-			parent.processChildCmd(commandData) // library marker tpLink.tpl_dev_common, line 154
-		} else { // library marker tpLink.tpl_dev_common, line 155
-			sendIotCmd(cmdBody, true) // library marker tpLink.tpl_dev_common, line 156
-		} // library marker tpLink.tpl_dev_common, line 157
-	} else { // library marker tpLink.tpl_dev_common, line 158
-		String nickname = device.getLabel().bytes.encodeBase64().toString() // library marker tpLink.tpl_dev_common, line 159
-		List requests = [[method: "set_device_info", params: [nickname: nickname]]] // library marker tpLink.tpl_dev_common, line 160
-		cmdBody = [method: "multipleRequest", params: [requests: requests]] // library marker tpLink.tpl_dev_common, line 161
-		if (IS_CHILD) { // library marker tpLink.tpl_dev_common, line 162
-			Map commandData = [cmdBody: cmdBody, retry: true, devId: getDataValue("deviceId"), // library marker tpLink.tpl_dev_common, line 163
-							   dni: device.deviceNetworkId, api: "smart"] // library marker tpLink.tpl_dev_common, line 164
-			parent.processChildCmd(commandData) // library marker tpLink.tpl_dev_common, line 165
-		} else { // library marker tpLink.tpl_dev_common, line 166
-			sendSmartCmd(cmdBody, true) // library marker tpLink.tpl_dev_common, line 167
-		} // library marker tpLink.tpl_dev_common, line 168
-	} // library marker tpLink.tpl_dev_common, line 169
-} // library marker tpLink.tpl_dev_common, line 170
+def setDeviceAlias() { // library marker tpLink.tpl_dev_common, line 141
+	Map cmdBody = [:] // library marker tpLink.tpl_dev_common, line 142
+	if (getDataValue("api") == "iot") { // library marker tpLink.tpl_dev_common, line 143
+		if (getDataValue("plugNo") || DEV_TYPE == "Child Plug Switch") { // library marker tpLink.tpl_dev_common, line 144
+			cmdBody << [context: [child_ids:[getDataValue("deviceId")]]] // library marker tpLink.tpl_dev_common, line 145
+		} // library marker tpLink.tpl_dev_common, line 146
+		cmdBody << [system: [set_dev_alias: [alias: device.getLabel()]]] // library marker tpLink.tpl_dev_common, line 147
+		if (IS_CHILD) { // library marker tpLink.tpl_dev_common, line 148
+			Map commandData = [cmdBody: cmdBody, retry: true, devId: getDataValue("deviceId"),  // library marker tpLink.tpl_dev_common, line 149
+						   	   dni: device.deviceNetworkId, api: "iot"] // library marker tpLink.tpl_dev_common, line 150
+			parent.processChildCmd(commandData) // library marker tpLink.tpl_dev_common, line 151
+		} else { // library marker tpLink.tpl_dev_common, line 152
+			sendIotCmd(cmdBody, true) // library marker tpLink.tpl_dev_common, line 153
+		} // library marker tpLink.tpl_dev_common, line 154
+	} else { // library marker tpLink.tpl_dev_common, line 155
+		String nickname = device.getLabel().bytes.encodeBase64().toString() // library marker tpLink.tpl_dev_common, line 156
+		List requests = [[method: "set_device_info", params: [nickname: nickname]]] // library marker tpLink.tpl_dev_common, line 157
+		cmdBody = [method: "multipleRequest", params: [requests: requests]] // library marker tpLink.tpl_dev_common, line 158
+		if (IS_CHILD) { // library marker tpLink.tpl_dev_common, line 159
+			Map commandData = [cmdBody: cmdBody, retry: true, devId: getDataValue("deviceId"), // library marker tpLink.tpl_dev_common, line 160
+							   dni: device.deviceNetworkId, api: "smart"] // library marker tpLink.tpl_dev_common, line 161
+			parent.processChildCmd(commandData) // library marker tpLink.tpl_dev_common, line 162
+		} else { // library marker tpLink.tpl_dev_common, line 163
+			sendSmartCmd(cmdBody, true) // library marker tpLink.tpl_dev_common, line 164
+		} // library marker tpLink.tpl_dev_common, line 165
+	} // library marker tpLink.tpl_dev_common, line 166
+} // library marker tpLink.tpl_dev_common, line 167
 
-def parseNameUpdate(response) { // library marker tpLink.tpl_dev_common, line 172
-	String name = device.getLabel() // library marker tpLink.tpl_dev_common, line 173
-	if (getDataValue("api") == "iot") { // library marker tpLink.tpl_dev_common, line 174
-		if (getDataValue("plugNo") != null) { // library marker tpLink.tpl_dev_common, line 175
-			Map newResp = response.children.find { it.id == getDataValue("plugNo") } // library marker tpLink.tpl_dev_common, line 176
-			if (newResp == null) { // library marker tpLink.tpl_dev_common, line 177
-				newResp = response.children.find { it.id == getDataValue("deviceId") } // library marker tpLink.tpl_dev_common, line 178
-			} // library marker tpLink.tpl_dev_common, line 179
-			response = newResp // library marker tpLink.tpl_dev_common, line 180
-		} // library marker tpLink.tpl_dev_common, line 181
-		name = response.alias // library marker tpLink.tpl_dev_common, line 182
-	} else { // library marker tpLink.tpl_dev_common, line 183
-		byte[] plainBytes = response.nickname.decodeBase64() // library marker tpLink.tpl_dev_common, line 184
-		name = new String(plainBytes) // library marker tpLink.tpl_dev_common, line 185
-	} // library marker tpLink.tpl_dev_common, line 186
-	device.setLabel(name) // library marker tpLink.tpl_dev_common, line 187
-	logData = [method: "updateNames", nameSync: nameSync, label: name] // library marker tpLink.tpl_dev_common, line 188
-	logDebug(logData) // library marker tpLink.tpl_dev_common, line 189
-	device.updateSetting("nameSync", [type: "enum", value: "no"]) // library marker tpLink.tpl_dev_common, line 190
-} // library marker tpLink.tpl_dev_common, line 191
+def parseNameUpdate(response) { // library marker tpLink.tpl_dev_common, line 169
+	String name = device.getLabel() // library marker tpLink.tpl_dev_common, line 170
+	if (getDataValue("api") == "iot") { // library marker tpLink.tpl_dev_common, line 171
+		if (getDataValue("plugNo") != null) { // library marker tpLink.tpl_dev_common, line 172
+			Map newResp = response.children.find { it.id == getDataValue("plugNo") } // library marker tpLink.tpl_dev_common, line 173
+			if (newResp == null) { // library marker tpLink.tpl_dev_common, line 174
+				newResp = response.children.find { it.id == getDataValue("deviceId") } // library marker tpLink.tpl_dev_common, line 175
+			} // library marker tpLink.tpl_dev_common, line 176
+			response = newResp // library marker tpLink.tpl_dev_common, line 177
+		} // library marker tpLink.tpl_dev_common, line 178
+		name = response.alias // library marker tpLink.tpl_dev_common, line 179
+	} else { // library marker tpLink.tpl_dev_common, line 180
+		byte[] plainBytes = response.nickname.decodeBase64() // library marker tpLink.tpl_dev_common, line 181
+		name = new String(plainBytes) // library marker tpLink.tpl_dev_common, line 182
+	} // library marker tpLink.tpl_dev_common, line 183
+	device.setLabel(name) // library marker tpLink.tpl_dev_common, line 184
+	logData = [method: "updateNames", nameSync: nameSync, label: name] // library marker tpLink.tpl_dev_common, line 185
+	logDebug(logData) // library marker tpLink.tpl_dev_common, line 186
+	device.updateSetting("nameSync", [type: "enum", value: "no"]) // library marker tpLink.tpl_dev_common, line 187
+} // library marker tpLink.tpl_dev_common, line 188
 
-def refresh() { // library marker tpLink.tpl_dev_common, line 193
-	if (getDataValue("api") == "smart") { // library marker tpLink.tpl_dev_common, line 194
-		if (DEV_TYPE == "Parent") { // library marker tpLink.tpl_dev_common, line 195
-			//	Smart parent works differently than iot parent using a specific // library marker tpLink.tpl_dev_common, line 196
-			//	refresh command to get child info. // library marker tpLink.tpl_dev_common, line 197
-			smartParentRefresh() // library marker tpLink.tpl_dev_common, line 198
-		} else { // library marker tpLink.tpl_dev_common, line 199
-			smartRefresh() // library marker tpLink.tpl_dev_common, line 200
-		} // library marker tpLink.tpl_dev_common, line 201
-	} else { // library marker tpLink.tpl_dev_common, line 202
-		iotRefresh() // library marker tpLink.tpl_dev_common, line 203
-	} // library marker tpLink.tpl_dev_common, line 204
-} // library marker tpLink.tpl_dev_common, line 205
+def refresh() { // library marker tpLink.tpl_dev_common, line 190
+	if (getDataValue("api") == "smart") { // library marker tpLink.tpl_dev_common, line 191
+		if (DEV_TYPE == "Parent") { // library marker tpLink.tpl_dev_common, line 192
+			//	Smart parent works differently than iot parent using a specific // library marker tpLink.tpl_dev_common, line 193
+			//	refresh command to get child info. // library marker tpLink.tpl_dev_common, line 194
+			smartParentRefresh() // library marker tpLink.tpl_dev_common, line 195
+		} else { // library marker tpLink.tpl_dev_common, line 196
+			smartRefresh() // library marker tpLink.tpl_dev_common, line 197
+		} // library marker tpLink.tpl_dev_common, line 198
+	} else { // library marker tpLink.tpl_dev_common, line 199
+		iotRefresh() // library marker tpLink.tpl_dev_common, line 200
+	} // library marker tpLink.tpl_dev_common, line 201
+} // library marker tpLink.tpl_dev_common, line 202
 
-def scheduleLogin() { // library marker tpLink.tpl_dev_common, line 207
-	def startS = Math.round((59) * Math.random()).toInteger() // library marker tpLink.tpl_dev_common, line 208
-	def startM = Math.round((59) * Math.random()).toInteger() // library marker tpLink.tpl_dev_common, line 209
-	def startH = Math.round((11) * Math.random()).toInteger() // library marker tpLink.tpl_dev_common, line 210
-	schedule("${startS} ${startM} ${startH}/8 * * ?", "deviceHandshake") // library marker tpLink.tpl_dev_common, line 211
-	return [scheduleLogin: "8 hours"] // library marker tpLink.tpl_dev_common, line 212
-} // library marker tpLink.tpl_dev_common, line 213
+def scheduleLogin() { // library marker tpLink.tpl_dev_common, line 204
+	def startS = Math.round((59) * Math.random()).toInteger() // library marker tpLink.tpl_dev_common, line 205
+	def startM = Math.round((59) * Math.random()).toInteger() // library marker tpLink.tpl_dev_common, line 206
+	def startH = Math.round((11) * Math.random()).toInteger() // library marker tpLink.tpl_dev_common, line 207
+	schedule("${startS} ${startM} ${startH}/8 * * ?", "deviceHandshake") // library marker tpLink.tpl_dev_common, line 208
+	return [scheduleLogin: "8 hours"] // library marker tpLink.tpl_dev_common, line 209
+} // library marker tpLink.tpl_dev_common, line 210
 
-def setPollInterval(systemPoll) { // library marker tpLink.tpl_dev_common, line 215
-	int pollInterval = (systemPoll =~ /\d+/)[0].toInteger() // library marker tpLink.tpl_dev_common, line 216
-	String pollMethod // library marker tpLink.tpl_dev_common, line 217
-	if (getDataValue("api") == "smart") { // library marker tpLink.tpl_dev_common, line 218
-		if (DEV_TYPE == "Parent") { // library marker tpLink.tpl_dev_common, line 219
-			pollMethod = "smartParentPoll" // library marker tpLink.tpl_dev_common, line 220
-		} else { // library marker tpLink.tpl_dev_common, line 221
-			pollMethod = "smartPoll" // library marker tpLink.tpl_dev_common, line 222
-		} // library marker tpLink.tpl_dev_common, line 223
-	} else { // library marker tpLink.tpl_dev_common, line 224
-		pollMethod = "iotPoll" // library marker tpLink.tpl_dev_common, line 225
-	} // library marker tpLink.tpl_dev_common, line 226
-	if (systemPoll.contains("sec")) { // library marker tpLink.tpl_dev_common, line 227
-		state.retry = false // library marker tpLink.tpl_dev_common, line 228
-		def startS = Math.round((pollInterval-1) * Math.random()).toInteger() // library marker tpLink.tpl_dev_common, line 229
-		schedule("${startS}/${pollInterval} * * * * ?", pollMethod) // library marker tpLink.tpl_dev_common, line 230
-		logWarn("setPollInterval: Polling intervals of less than one minute " + // library marker tpLink.tpl_dev_common, line 231
-				"can take high resources and may impact hub performance.") // library marker tpLink.tpl_dev_common, line 232
-	} else { // library marker tpLink.tpl_dev_common, line 233
-		state.retry = true // library marker tpLink.tpl_dev_common, line 234
-		def startS = Math.round(59 * Math.random()).toInteger() // library marker tpLink.tpl_dev_common, line 235
-		def startM = Math.round((pollInterval-1) * Math.random()).toInteger() // library marker tpLink.tpl_dev_common, line 236
-		schedule("${startS} ${startM}/${pollInterval} * * * ?", pollMethod) // library marker tpLink.tpl_dev_common, line 237
-	} // library marker tpLink.tpl_dev_common, line 238
-	return [setPollInterval: [systemPoll: systemPoll, pollMethod: pollMethod]] // library marker tpLink.tpl_dev_common, line 239
-} // library marker tpLink.tpl_dev_common, line 240
+def setPollInterval(systemPoll) { // library marker tpLink.tpl_dev_common, line 212
+	int pollInterval = (systemPoll =~ /\d+/)[0].toInteger() // library marker tpLink.tpl_dev_common, line 213
+	String pollMethod // library marker tpLink.tpl_dev_common, line 214
+	if (getDataValue("api") == "smart") { // library marker tpLink.tpl_dev_common, line 215
+		if (DEV_TYPE == "Parent") { // library marker tpLink.tpl_dev_common, line 216
+			pollMethod = "smartParentPoll" // library marker tpLink.tpl_dev_common, line 217
+		} else { // library marker tpLink.tpl_dev_common, line 218
+			pollMethod = "smartPoll" // library marker tpLink.tpl_dev_common, line 219
+		} // library marker tpLink.tpl_dev_common, line 220
+	} else { // library marker tpLink.tpl_dev_common, line 221
+		pollMethod = "iotPoll" // library marker tpLink.tpl_dev_common, line 222
+	} // library marker tpLink.tpl_dev_common, line 223
+	if (systemPoll.contains("sec")) { // library marker tpLink.tpl_dev_common, line 224
+		state.retry = false // library marker tpLink.tpl_dev_common, line 225
+		def startS = Math.round((pollInterval-1) * Math.random()).toInteger() // library marker tpLink.tpl_dev_common, line 226
+		schedule("${startS}/${pollInterval} * * * * ?", pollMethod) // library marker tpLink.tpl_dev_common, line 227
+		logWarn("setPollInterval: Polling intervals of less than one minute " + // library marker tpLink.tpl_dev_common, line 228
+				"can take high resources and may impact hub performance.") // library marker tpLink.tpl_dev_common, line 229
+	} else { // library marker tpLink.tpl_dev_common, line 230
+		state.retry = true // library marker tpLink.tpl_dev_common, line 231
+		def startS = Math.round(59 * Math.random()).toInteger() // library marker tpLink.tpl_dev_common, line 232
+		def startM = Math.round((pollInterval-1) * Math.random()).toInteger() // library marker tpLink.tpl_dev_common, line 233
+		schedule("${startS} ${startM}/${pollInterval} * * * ?", pollMethod) // library marker tpLink.tpl_dev_common, line 234
+	} // library marker tpLink.tpl_dev_common, line 235
+	return [setPollInterval: [systemPoll: systemPoll, pollMethod: pollMethod]] // library marker tpLink.tpl_dev_common, line 236
+} // library marker tpLink.tpl_dev_common, line 237
 
-def deviceHandshake(protocol = getDataValue("protocol")) { // library marker tpLink.tpl_dev_common, line 242
-	if (protocol == "klap") { // library marker tpLink.tpl_dev_common, line 243
-		klapHandshake(getDataValue("baseUrl"), parent.localHash) // library marker tpLink.tpl_dev_common, line 244
-	} else if (protocol == "aes") { // library marker tpLink.tpl_dev_common, line 245
-		aesHandshake(getDataValue("baseUrl")) // library marker tpLink.tpl_dev_common, line 246
-	} else { // library marker tpLink.tpl_dev_common, line 247
-		iotRefresh() // library marker tpLink.tpl_dev_common, line 248
-	} // library marker tpLink.tpl_dev_common, line 249
-} // library marker tpLink.tpl_dev_common, line 250
+def deviceHandshake(protocol = getDataValue("protocol")) { // library marker tpLink.tpl_dev_common, line 239
+	if (protocol == "klap") { // library marker tpLink.tpl_dev_common, line 240
+		klapHandshake(getDataValue("baseUrl"), parent.localHash) // library marker tpLink.tpl_dev_common, line 241
+	} else if (protocol == "aes") { // library marker tpLink.tpl_dev_common, line 242
+		aesHandshake(getDataValue("baseUrl")) // library marker tpLink.tpl_dev_common, line 243
+	} else { // library marker tpLink.tpl_dev_common, line 244
+		iotRefresh() // library marker tpLink.tpl_dev_common, line 245
+	} // library marker tpLink.tpl_dev_common, line 246
+} // library marker tpLink.tpl_dev_common, line 247
 
-def configure() { // library marker tpLink.tpl_dev_common, line 252
-	//	Only check xor device if it is already xor. // library marker tpLink.tpl_dev_common, line 253
-	if (getDataValue("protocol") == "xor") { // library marker tpLink.tpl_dev_common, line 254
-		sendUdp(xorDiscCmd(), "parseCheckXor", getDataValue("baseUrl"), 5) // library marker tpLink.tpl_dev_common, line 255
-	} else { // library marker tpLink.tpl_dev_common, line 256
-		checkSecure() // library marker tpLink.tpl_dev_common, line 257
-	} // library marker tpLink.tpl_dev_common, line 258
-} // library marker tpLink.tpl_dev_common, line 259
+def configure() { // library marker tpLink.tpl_dev_common, line 249
+	//	If version update not completed, both the // library marker tpLink.tpl_dev_common, line 250
+	//	getDataProtocol() would return null. // library marker tpLink.tpl_dev_common, line 251
+	//	Only check xor device if it is already xor. // library marker tpLink.tpl_dev_common, line 252
+	if (getDataValue("protocol") == "xor") { // library marker tpLink.tpl_dev_common, line 253
+		sendUdp(xorDiscCmd(), "parseCheckXor", getDataValue("baseUrl"), 5) // library marker tpLink.tpl_dev_common, line 254
+	} else if (getDataValue("protocol") == "klap") { // library marker tpLink.tpl_dev_common, line 255
+		checkSecure() // library marker tpLink.tpl_dev_common, line 256
+	} else if (settings.version == null) { // library marker tpLink.tpl_dev_common, line 257
+		verUpdate_2_5_3()  // library marker tpLink.tpl_dev_common, line 258
+	} // library marker tpLink.tpl_dev_common, line 259
+} // library marker tpLink.tpl_dev_common, line 260
 
-def parseCheckXor(message) { // library marker tpLink.tpl_dev_common, line 261
-	Map logData = [method: "parseCheckXor"] // library marker tpLink.tpl_dev_common, line 262
-	if (message == "udpTimeout") { // library marker tpLink.tpl_dev_common, line 263
-		logData << [status: "noXorDeviceFound", action: "checkSecure"] // library marker tpLink.tpl_dev_common, line 264
-		checkSecure() // library marker tpLink.tpl_dev_common, line 265
-	} else { // library marker tpLink.tpl_dev_common, line 266
-		unschedule("udpTimeout") // library marker tpLink.tpl_dev_common, line 267
-		Map respData = parseUdp(message, "xor") // library marker tpLink.tpl_dev_common, line 268
-		if (respData.status == "ok") { // library marker tpLink.tpl_dev_common, line 269
-			Map cmdResp = respData.cmdResp.system.get_sysinfo // library marker tpLink.tpl_dev_common, line 270
-			def foundDni // library marker tpLink.tpl_dev_common, line 271
-			if (cmdResp.mic_mac) { // library marker tpLink.tpl_dev_common, line 272
-				foundDni = cmdResp.mic_mac // library marker tpLink.tpl_dev_common, line 273
-			} else { // library marker tpLink.tpl_dev_common, line 274
-				foundDni = cmdResp.mac.replace(/:/, "") // library marker tpLink.tpl_dev_common, line 275
-			} // library marker tpLink.tpl_dev_common, line 276
-			if (getDataValue("plugNo")) { // library marker tpLink.tpl_dev_common, line 277
-				foundDni = foundDni + getDataValue("plugNo") // library marker tpLink.tpl_dev_common, line 278
-			} // library marker tpLink.tpl_dev_common, line 279
-			if (foundDni == device.deviceNetworkId) { // library marker tpLink.tpl_dev_common, line 280
-				logData << [status: "deviceFound", action: "updated"] // library marker tpLink.tpl_dev_common, line 281
-				runIn(1, deviceHandshake) // library marker tpLink.tpl_dev_common, line 282
-			} else { // library marker tpLink.tpl_dev_common, line 283
-				logData << [status: "foundDifferentDevice", action: "quickPoll"] // library marker tpLink.tpl_dev_common, line 284
-				parent.pollForDevices("poll") // library marker tpLink.tpl_dev_common, line 285
-			} // library marker tpLink.tpl_dev_common, line 286
-		} else { // library marker tpLink.tpl_dev_common, line 287
-			logData << [status: "invalidUdpResponse", action: "checkSecure"] // library marker tpLink.tpl_dev_common, line 288
-			checkSecure() // library marker tpLink.tpl_dev_common, line 289
-		} // library marker tpLink.tpl_dev_common, line 290
-	} // library marker tpLink.tpl_dev_common, line 291
-	logInfo(logData) // library marker tpLink.tpl_dev_common, line 292
-} // library marker tpLink.tpl_dev_common, line 293
+def parseCheckXor(message) { // library marker tpLink.tpl_dev_common, line 262
+	Map logData = [method: "parseCheckXor"] // library marker tpLink.tpl_dev_common, line 263
+	if (message == "udpTimeout") { // library marker tpLink.tpl_dev_common, line 264
+		logData << [status: "noXorDeviceFound", action: "checkSecure"] // library marker tpLink.tpl_dev_common, line 265
+		checkSecure() // library marker tpLink.tpl_dev_common, line 266
+	} else { // library marker tpLink.tpl_dev_common, line 267
+		unschedule("udpTimeout") // library marker tpLink.tpl_dev_common, line 268
+		Map respData = parseUdp(message, "xor") // library marker tpLink.tpl_dev_common, line 269
+		if (respData.status == "ok") { // library marker tpLink.tpl_dev_common, line 270
+			Map cmdResp = respData.cmdResp.system.get_sysinfo // library marker tpLink.tpl_dev_common, line 271
+			def foundDni // library marker tpLink.tpl_dev_common, line 272
+			if (cmdResp.mic_mac) { // library marker tpLink.tpl_dev_common, line 273
+				foundDni = cmdResp.mic_mac // library marker tpLink.tpl_dev_common, line 274
+			} else { // library marker tpLink.tpl_dev_common, line 275
+				foundDni = cmdResp.mac.replace(/:/, "") // library marker tpLink.tpl_dev_common, line 276
+			} // library marker tpLink.tpl_dev_common, line 277
+			if (getDataValue("plugNo")) { // library marker tpLink.tpl_dev_common, line 278
+				foundDni = foundDni + getDataValue("plugNo") // library marker tpLink.tpl_dev_common, line 279
+			} // library marker tpLink.tpl_dev_common, line 280
+			if (foundDni == device.deviceNetworkId) { // library marker tpLink.tpl_dev_common, line 281
+				logData << [status: "deviceFound", action: "updated"] // library marker tpLink.tpl_dev_common, line 282
+				runIn(1, deviceHandshake) // library marker tpLink.tpl_dev_common, line 283
+			} else { // library marker tpLink.tpl_dev_common, line 284
+				logData << [status: "foundDifferentDevice", action: "quickPoll"] // library marker tpLink.tpl_dev_common, line 285
+				parent.pollForDevices("poll") // library marker tpLink.tpl_dev_common, line 286
+			} // library marker tpLink.tpl_dev_common, line 287
+		} else { // library marker tpLink.tpl_dev_common, line 288
+			logData << [status: "invalidUdpResponse", action: "checkSecure"] // library marker tpLink.tpl_dev_common, line 289
+			checkSecure() // library marker tpLink.tpl_dev_common, line 290
+		} // library marker tpLink.tpl_dev_common, line 291
+	} // library marker tpLink.tpl_dev_common, line 292
+	logInfo(logData) // library marker tpLink.tpl_dev_common, line 293
+} // library marker tpLink.tpl_dev_common, line 294
 
-def checkSecure() { // library marker tpLink.tpl_dev_common, line 295
-	//	If XOR Fails or device is already Secure..... // library marker tpLink.tpl_dev_common, line 296
-	def ip = (getDataValue("baseUrl") =~ /\b\d{1,3}(?:\.\d{1,3}){3}\b/)[0] // library marker tpLink.tpl_dev_common, line 297
-	def ipPort = ip + ":20002" // library marker tpLink.tpl_dev_common, line 298
-	sendUdp(secureDiscCmd(), "parseCheckSecure", ipPort) // library marker tpLink.tpl_dev_common, line 299
-} // library marker tpLink.tpl_dev_common, line 300
+def checkSecure() { // library marker tpLink.tpl_dev_common, line 296
+	//	If XOR Fails or device is already Secure..... // library marker tpLink.tpl_dev_common, line 297
+	def ip = (getDataValue("baseUrl") =~ /\b\d{1,3}(?:\.\d{1,3}){3}\b/)[0] // library marker tpLink.tpl_dev_common, line 298
+	def ipPort = ip + ":20002" // library marker tpLink.tpl_dev_common, line 299
+	sendUdp(secureDiscCmd(), "parseCheckSecure", ipPort) // library marker tpLink.tpl_dev_common, line 300
+} // library marker tpLink.tpl_dev_common, line 301
 
-def parseCheckSecure(message) { // library marker tpLink.tpl_dev_common, line 302
-//	If an XOR device is found here (therefore, not found in the XOR Check), this // library marker tpLink.tpl_dev_common, line 303
-//	will transform the device from XOR to KLAP by updating the protocol and // library marker tpLink.tpl_dev_common, line 304
-//	baseURL values determined herein. // library marker tpLink.tpl_dev_common, line 305
-	Map logData = [method: "parseCheckSecure"] // library marker tpLink.tpl_dev_common, line 306
-	if (message == "udpTimeout") { // library marker tpLink.tpl_dev_common, line 307
-		logData << [status: "noSecureDeviceFound", next: "quickFind"] // library marker tpLink.tpl_dev_common, line 308
-		parent.pollForDevices("quickFind", 5) // library marker tpLink.tpl_dev_common, line 309
-	} else { // library marker tpLink.tpl_dev_common, line 310
-		unschedule("udpTimeout") // library marker tpLink.tpl_dev_common, line 311
-		Map respData = parseUdp(message, "secure") // library marker tpLink.tpl_dev_common, line 312
-		if (respData.status == "ok") { // library marker tpLink.tpl_dev_common, line 313
-			Map cmdResp = respData.cmdResp.result // library marker tpLink.tpl_dev_common, line 314
-			String foundProt = cmdResp.mgt_encrypt_schm.encrypt_type.toLowerCase() // library marker tpLink.tpl_dev_common, line 315
-			def foundDni = cmdResp.mac.replace(/-/, "") // library marker tpLink.tpl_dev_common, line 316
-			if (getDataValue("plugNo")) { foundDni = foundDni + getDataValue("plugNo") } // library marker tpLink.tpl_dev_common, line 317
-			if (foundDni == device.deviceNetworkId) { // library marker tpLink.tpl_dev_common, line 318
-				if (foundProt == "tpap") { // library marker tpLink.tpl_dev_common, line 319
-					logData << [foundProt: "TPAP", action: "NOT UPDATED. TPAP not supported.", // library marker tpLink.tpl_dev_common, line 320
-								note: "divice will likely work as specified"] // library marker tpLink.tpl_dev_common, line 321
-				} else if (foundProt != getDataValue("protocol") && foundProt != "tpap") { // library marker tpLink.tpl_dev_common, line 322
-					String httpPort = cmdResp.mgt_encrypt_schm.http_port // library marker tpLink.tpl_dev_common, line 323
-					String httpStr = "http://" // library marker tpLink.tpl_dev_common, line 324
-					String httpPath = "/app" // library marker tpLink.tpl_dev_common, line 325
-					String baseUrl = httpStr + respData.ip + ":" + httpPort + httpPath // library marker tpLink.tpl_dev_common, line 326
-					logData << [update: "protocolUpdated", newProtocol: foundProt, baseUrl: baseUrl] // library marker tpLink.tpl_dev_common, line 327
-					updateDataValue("protocol", foundProt) // library marker tpLink.tpl_dev_common, line 328
-					updateDataValue("baseUrl", baseUrl) // library marker tpLink.tpl_dev_common, line 329
-				} // library marker tpLink.tpl_dev_common, line 330
-				logData << [status: "deviceFound", next: "deviceHandshake"] // library marker tpLink.tpl_dev_common, line 331
-				runIn(1, deviceHandshake) // library marker tpLink.tpl_dev_common, line 332
-			} else { // library marker tpLink.tpl_dev_common, line 333
-				logData << [status: "foundDifferentDevice", next: "pollForDevices"] // library marker tpLink.tpl_dev_common, line 334
-			} // library marker tpLink.tpl_dev_common, line 335
-		} else { // library marker tpLink.tpl_dev_common, line 336
-			logData << [status: "invalidUdpResponse", next: "pollForDevices"] // library marker tpLink.tpl_dev_common, line 337
-		} // library marker tpLink.tpl_dev_common, line 338
-	} // library marker tpLink.tpl_dev_common, line 339
-	logInfo(logData) // library marker tpLink.tpl_dev_common, line 340
-} // library marker tpLink.tpl_dev_common, line 341
+def parseCheckSecure(message) { // library marker tpLink.tpl_dev_common, line 303
+//	If an XOR device is found here (therefore, not found in the XOR Check), this // library marker tpLink.tpl_dev_common, line 304
+//	will transform the device from XOR to KLAP by updating the protocol and // library marker tpLink.tpl_dev_common, line 305
+//	baseURL values determined herein. // library marker tpLink.tpl_dev_common, line 306
+	Map logData = [method: "parseCheckSecure"] // library marker tpLink.tpl_dev_common, line 307
+	if (message == "udpTimeout") { // library marker tpLink.tpl_dev_common, line 308
+		logData << [status: "noSecureDeviceFound", next: "quickFind"] // library marker tpLink.tpl_dev_common, line 309
+		parent.pollForDevices("quickFind", 5) // library marker tpLink.tpl_dev_common, line 310
+	} else { // library marker tpLink.tpl_dev_common, line 311
+		unschedule("udpTimeout") // library marker tpLink.tpl_dev_common, line 312
+		Map respData = parseUdp(message, "secure") // library marker tpLink.tpl_dev_common, line 313
+		if (respData.status == "ok") { // library marker tpLink.tpl_dev_common, line 314
+			Map cmdResp = respData.cmdResp.result // library marker tpLink.tpl_dev_common, line 315
+			String foundProt = cmdResp.mgt_encrypt_schm.encrypt_type.toLowerCase() // library marker tpLink.tpl_dev_common, line 316
+			def foundDni = cmdResp.mac.replace(/-/, "") // library marker tpLink.tpl_dev_common, line 317
+			if (getDataValue("plugNo")) { foundDni = foundDni + getDataValue("plugNo") } // library marker tpLink.tpl_dev_common, line 318
+			if (foundDni == device.deviceNetworkId) { // library marker tpLink.tpl_dev_common, line 319
+				if (foundProt == "tpap") { // library marker tpLink.tpl_dev_common, line 320
+					logData << [foundProt: "TPAP", action: "NOT UPDATED. TPAP not supported.", // library marker tpLink.tpl_dev_common, line 321
+								note: "divice will likely work as specified"] // library marker tpLink.tpl_dev_common, line 322
+				} else if (foundProt != getDataValue("protocol") && foundProt != "tpap") { // library marker tpLink.tpl_dev_common, line 323
+					String httpPort = cmdResp.mgt_encrypt_schm.http_port // library marker tpLink.tpl_dev_common, line 324
+					String httpStr = "http://" // library marker tpLink.tpl_dev_common, line 325
+					String httpPath = "/app" // library marker tpLink.tpl_dev_common, line 326
+					String baseUrl = httpStr + respData.ip + ":" + httpPort + httpPath // library marker tpLink.tpl_dev_common, line 327
+					logData << [update: "protocolUpdated", newProtocol: foundProt, baseUrl: baseUrl] // library marker tpLink.tpl_dev_common, line 328
+					updateDataValue("protocol", foundProt) // library marker tpLink.tpl_dev_common, line 329
+					updateDataValue("baseUrl", baseUrl) // library marker tpLink.tpl_dev_common, line 330
+				} // library marker tpLink.tpl_dev_common, line 331
+				logData << [status: "deviceFound", next: "deviceHandshake"] // library marker tpLink.tpl_dev_common, line 332
+				runIn(1, deviceHandshake) // library marker tpLink.tpl_dev_common, line 333
+			} else { // library marker tpLink.tpl_dev_common, line 334
+				logData << [status: "foundDifferentDevice", next: "pollForDevices"] // library marker tpLink.tpl_dev_common, line 335
+			} // library marker tpLink.tpl_dev_common, line 336
+		} else { // library marker tpLink.tpl_dev_common, line 337
+			logData << [status: "invalidUdpResponse", next: "pollForDevices"] // library marker tpLink.tpl_dev_common, line 338
+		} // library marker tpLink.tpl_dev_common, line 339
+	} // library marker tpLink.tpl_dev_common, line 340
+	logInfo(logData) // library marker tpLink.tpl_dev_common, line 341
+} // library marker tpLink.tpl_dev_common, line 342
 
-/* // library marker tpLink.tpl_dev_common, line 343
-In the app during a find (discovery or quick) device data is generated // library marker tpLink.tpl_dev_common, line 344
-and sent to this method. XOR data should always (by design) comes first. // library marker tpLink.tpl_dev_common, line 345
-To preclude multiple processing, set state.updProcessed to true the first // library marker tpLink.tpl_dev_common, line 346
-time an update is processed and skip the remaining. // library marker tpLink.tpl_dev_common, line 347
-So if several finds are done rapidly, only the FIRST until the state times out. // library marker tpLink.tpl_dev_common, line 348
-Future updates: if there are changes in dataValues, an update section will // library marker tpLink.tpl_dev_common, line 349
-need to be added. // library marker tpLink.tpl_dev_common, line 350
-*/ // library marker tpLink.tpl_dev_common, line 351
-void updateDeviceData(Map devData) { // library marker tpLink.tpl_dev_common, line 352
-	Map logData = [method: "updateDeviceData", devDataSize: devData.size()] // library marker tpLink.tpl_dev_common, line 353
-	/*	Second path to transition from Kasa to KasaTapo in case (for any // library marker tpLink.tpl_dev_common, line 354
-		reason) the hubStartupHandler is not successful. // library marker tpLink.tpl_dev_common, line 355
-		This should add methods if base data changes in future updates. But // library marker tpLink.tpl_dev_common, line 356
-		each should be kept in sequence to support users that infrequently // library marker tpLink.tpl_dev_common, line 357
-		update their hubs.*/ // library marker tpLink.tpl_dev_common, line 358
-	verUpdate_2_5_3() // library marker tpLink.tpl_dev_common, line 359
-//	Instrumentation	 // library marker tpLink.tpl_dev_common, line 360
-//log.trace "updateDeviceData: [devData: $devData]" // library marker tpLink.tpl_dev_common, line 361
-	if (devData != [:]) { // library marker tpLink.tpl_dev_common, line 362
-		String protocol = getDataValue("protocol") // library marker tpLink.tpl_dev_common, line 363
-		String baseUrl = getDataValue("baseUrl") // library marker tpLink.tpl_dev_common, line 364
-		String version = getDataValue("version") // library marker tpLink.tpl_dev_common, line 365
-		//	Device will update to KLAP once it is discovered via klap but  // library marker tpLink.tpl_dev_common, line 366
-		//	not via XOR. // library marker tpLink.tpl_dev_common, line 367
-		//	deviceHandshake is only run if something as changed. // library marker tpLink.tpl_dev_common, line 368
-		String notice = "Protocol or baseUrl are changed. CHECK DEVICE" // library marker tpLink.tpl_dev_common, line 369
-		boolean newData = false // library marker tpLink.tpl_dev_common, line 370
-		if (state.updProcessed == true) { // library marker tpLink.tpl_dev_common, line 371
-			logData << [notProcessed: "XOR data previously processed"] // library marker tpLink.tpl_dev_common, line 372
-		} else if (devData.protocol == protocol) { // library marker tpLink.tpl_dev_common, line 373
-			//	protocol not processed. Only xor or klap baseUrl processed. // library marker tpLink.tpl_dev_common, line 374
-			if (baseUrl != devData.baseUrl) { // library marker tpLink.tpl_dev_common, line 375
-				updateDataValue("baseUrl", devData.baseUrl) // library marker tpLink.tpl_dev_common, line 376
-				logData << [newBaseUrl: devData.baseUrl, NOTICE: notice] // library marker tpLink.tpl_dev_common, line 377
-				newData = true // library marker tpLink.tpl_dev_common, line 378
-			} // library marker tpLink.tpl_dev_common, line 379
-			state.updProcessed = true // library marker tpLink.tpl_dev_common, line 380
-		} else if (protocol == "xor" && devData.protocol != "xor") { // library marker tpLink.tpl_dev_common, line 381
-			//	protocol and baseUrl updated. This is the big case. // library marker tpLink.tpl_dev_common, line 382
-			//	only goes from xor -> klap. Never from klap -> xor. // library marker tpLink.tpl_dev_common, line 383
-			//	Note that preference "changeProt" provides the user // library marker tpLink.tpl_dev_common, line 384
-			//	a method to manually change protocol. // library marker tpLink.tpl_dev_common, line 385
-			updateDataValue("protocol", devData.protocol) // library marker tpLink.tpl_dev_common, line 386
-			updateDataValue("baseUrl", devData.baseUrl) // library marker tpLink.tpl_dev_common, line 387
-			logData << [newProtocol: devData.protocol, newBaseUrl: devData.baseUrl, // library marker tpLink.tpl_dev_common, line 388
-						NOTICE: notice] // library marker tpLink.tpl_dev_common, line 389
-			newData = true // library marker tpLink.tpl_dev_common, line 390
-			state.updProcessed = true // library marker tpLink.tpl_dev_common, line 391
-		} else { // library marker tpLink.tpl_dev_common, line 392
-			logData << [notProcessed: "ignored xor find of a klap protocol device."] // library marker tpLink.tpl_dev_common, line 393
-		} // library marker tpLink.tpl_dev_common, line 394
+/* // library marker tpLink.tpl_dev_common, line 344
+In the app during a find (discovery or quick) device data is generated // library marker tpLink.tpl_dev_common, line 345
+and sent to this method. XOR data should always (by design) comes first. // library marker tpLink.tpl_dev_common, line 346
+To preclude multiple processing, set state.updProcessed to true the first // library marker tpLink.tpl_dev_common, line 347
+time an update is processed and skip the remaining. // library marker tpLink.tpl_dev_common, line 348
+So if several finds are done rapidly, only the FIRST until the state times out. // library marker tpLink.tpl_dev_common, line 349
+Future updates: if there are changes in dataValues, an update section will // library marker tpLink.tpl_dev_common, line 350
+need to be added. // library marker tpLink.tpl_dev_common, line 351
+*/ // library marker tpLink.tpl_dev_common, line 352
+void updateDeviceData(Map devData) { // library marker tpLink.tpl_dev_common, line 353
+	Map logData = [method: "updateDeviceData", devDataSize: devData.size()] // library marker tpLink.tpl_dev_common, line 354
+//	Instrumentation	 // library marker tpLink.tpl_dev_common, line 355
+//log.trace "updateDeviceData: [devData: $devData]" // library marker tpLink.tpl_dev_common, line 356
+	if (devData != [:]) { // library marker tpLink.tpl_dev_common, line 357
+		/*	Second path to transition from Kasa to KasaTapo in case (for any // library marker tpLink.tpl_dev_common, line 358
+			reason) the hubStartupHandler is not successful. By running quickFind // library marker tpLink.tpl_dev_common, line 359
+			or discovery in the app, data is sent to child devices. // library marker tpLink.tpl_dev_common, line 360
+			Other paths are in methods poll() and configure().*/ // library marker tpLink.tpl_dev_common, line 361
+		if (version == null) { // library marker tpLink.tpl_dev_common, line 362
+			verUpdate_2_5_3() // library marker tpLink.tpl_dev_common, line 363
+			return // library marker tpLink.tpl_dev_common, line 364
+		} // library marker tpLink.tpl_dev_common, line 365
+		//	During an app.quickFind, only the protocol, baseUrl, and version are // library marker tpLink.tpl_dev_common, line 366
+		//	provided. // library marker tpLink.tpl_dev_common, line 367
+		String protocol = getDataValue("protocol") // library marker tpLink.tpl_dev_common, line 368
+		String baseUrl = getDataValue("baseUrl") // library marker tpLink.tpl_dev_common, line 369
+		String version = getDataValue("version") // library marker tpLink.tpl_dev_common, line 370
+		//	Device will update to KLAP once it is discovered via klap but  // library marker tpLink.tpl_dev_common, line 371
+		//	not via XOR. // library marker tpLink.tpl_dev_common, line 372
+		//	deviceHandshake is only run if something as changed. // library marker tpLink.tpl_dev_common, line 373
+		String notice = "Protocol or baseUrl are changed. CHECK DEVICE" // library marker tpLink.tpl_dev_common, line 374
+		boolean newData = false // library marker tpLink.tpl_dev_common, line 375
+		if (state.updProcessed == true) { // library marker tpLink.tpl_dev_common, line 376
+			logData << [notProcessed: "XOR data previously processed"] // library marker tpLink.tpl_dev_common, line 377
+		} else if (devData.protocol == protocol) { // library marker tpLink.tpl_dev_common, line 378
+			//	protocol not processed. Only xor or klap baseUrl processed. // library marker tpLink.tpl_dev_common, line 379
+			if (baseUrl != devData.baseUrl) { // library marker tpLink.tpl_dev_common, line 380
+				updateDataValue("baseUrl", devData.baseUrl) // library marker tpLink.tpl_dev_common, line 381
+				logData << [newBaseUrl: devData.baseUrl, NOTICE: notice] // library marker tpLink.tpl_dev_common, line 382
+				newData = true // library marker tpLink.tpl_dev_common, line 383
+			} // library marker tpLink.tpl_dev_common, line 384
+			state.updProcessed = true // library marker tpLink.tpl_dev_common, line 385
+		} else if (protocol == "xor" && devData.protocol != "xor") { // library marker tpLink.tpl_dev_common, line 386
+			//	protocol and baseUrl updated. This is the big case. // library marker tpLink.tpl_dev_common, line 387
+			//	only goes from xor -> klap. Never from klap -> xor. // library marker tpLink.tpl_dev_common, line 388
+			//	Note that preference "changeProt" provides the user // library marker tpLink.tpl_dev_common, line 389
+			//	a method to manually change protocol. // library marker tpLink.tpl_dev_common, line 390
+			updateDataValue("protocol", devData.protocol) // library marker tpLink.tpl_dev_common, line 391
+			updateDataValue("baseUrl", devData.baseUrl) // library marker tpLink.tpl_dev_common, line 392
+			logData << [newProtocol: devData.protocol, newBaseUrl: devData.baseUrl, // library marker tpLink.tpl_dev_common, line 393
+						NOTICE: notice] // library marker tpLink.tpl_dev_common, line 394
+			newData = true // library marker tpLink.tpl_dev_common, line 395
+			state.updProcessed = true // library marker tpLink.tpl_dev_common, line 396
+		} else { // library marker tpLink.tpl_dev_common, line 397
+			logData << [notProcessed: "ignored xor find of a klap protocol device."] // library marker tpLink.tpl_dev_common, line 398
+		} // library marker tpLink.tpl_dev_common, line 399
 
-		if (newData) { runIn(5, configure) } // library marker tpLink.tpl_dev_common, line 396
-		runIn(300, clearUpdProcessed) // library marker tpLink.tpl_dev_common, line 397
-		logInfo(logData) // library marker tpLink.tpl_dev_common, line 398
-	} // library marker tpLink.tpl_dev_common, line 399
-} // library marker tpLink.tpl_dev_common, line 400
+		if (newData) { runIn(5, configure) } // library marker tpLink.tpl_dev_common, line 401
+		runIn(300, clearUpdProcessed) // library marker tpLink.tpl_dev_common, line 402
+		logInfo(logData) // library marker tpLink.tpl_dev_common, line 403
+	} // library marker tpLink.tpl_dev_common, line 404
+} // library marker tpLink.tpl_dev_common, line 405
 
-void clearUpdProcessed() { state.remove("xorReceived") } // library marker tpLink.tpl_dev_common, line 402
+void clearUpdProcessed() { state.remove("xorReceived") } // library marker tpLink.tpl_dev_common, line 407
 
-//	Initiated by app.hubStartupHandler. // library marker tpLink.tpl_dev_common, line 404
-//	Does an immediated update of the device data followed by an // library marker tpLink.tpl_dev_common, line 405
-//	updated to reset settings and kick-start the device. // library marker tpLink.tpl_dev_common, line 406
-def verUpdate_2_5_3() { // library marker tpLink.tpl_dev_common, line 407
-	//	The signature for this update is NOT version. It is if the // library marker tpLink.tpl_dev_common, line 408
-	//	dataValue "protocol" exists. So exit if it exists. // library marker tpLink.tpl_dev_common, line 409
-	if (getDataValue("protocol") != null) { return } // library marker tpLink.tpl_dev_common, line 410
+//	Initiated by app.hubStartupHandler. // library marker tpLink.tpl_dev_common, line 409
+//	Does an immediated update of the device data followed by an // library marker tpLink.tpl_dev_common, line 410
+//	updated to reset settings and kick-start the device. Only // library marker tpLink.tpl_dev_common, line 411
+//	executes changes if version is null (the major transition // library marker tpLink.tpl_dev_common, line 412
+//	signature). // library marker tpLink.tpl_dev_common, line 413
+//	Rationale for separate method. This method does not rely on // library marker tpLink.tpl_dev_common, line 414
+//	UDP - XOR communications from the device to execute successfully // library marker tpLink.tpl_dev_common, line 415
+//	(a frequent issue) and will update the device to it's current // library marker tpLink.tpl_dev_common, line 416
+//	settings for UDP-XOR. If UDP failure is persistent, configure will // library marker tpLink.tpl_dev_common, line 417
+//	catch this (part of error handling) as well an app discover action. // library marker tpLink.tpl_dev_common, line 418
+def verUpdate_2_5_3() { // library marker tpLink.tpl_dev_common, line 419
+	if (settings.version == null) { // library marker tpLink.tpl_dev_common, line 420
+		unschedule() // library marker tpLink.tpl_dev_common, line 421
+		logInfo("EXECUTING ONE-TIME CONVERSION: kasa Integration to kasaTapoIntegration") // library marker tpLink.tpl_dev_common, line 422
+		log.warn "This update will not correct IP issues if it is a local LAN issue." // library marker tpLink.tpl_dev_common, line 423
+		log.warn "CHECK YOUR DEVICE AND RUN CONFIGURATION IF THERE ARE ISSUES." // library marker tpLink.tpl_dev_common, line 424
+		Map respData = [method: "version_2_5_3_update"] // library marker tpLink.tpl_dev_common, line 425
+		updateDataValue("protocol", "xor") // library marker tpLink.tpl_dev_common, line 426
+		updateDataValue("api", "iot") // library marker tpLink.tpl_dev_common, line 427
+		Map currDataValues = device.getData() // library marker tpLink.tpl_dev_common, line 428
+		Map currSettings = settings // library marker tpLink.tpl_dev_common, line 429
+//	Instrumentation	for test // library marker tpLink.tpl_dev_common, line 430
+//log.debug "currDataValues: $currDataValues" // library marker tpLink.tpl_dev_common, line 431
+//log.debug "currSettings: $currSettings" // library marker tpLink.tpl_dev_common, line 432
+		if (currDataValues.deviceIP != null && currDataValues.devicePort != null) { // library marker tpLink.tpl_dev_common, line 433
+			String baseUrl = "${currDataValues.deviceIP}:${currDataValues.devicePort}" // library marker tpLink.tpl_dev_common, line 434
+			updateDataValue("baseUrl", baseUrl) // library marker tpLink.tpl_dev_common, line 435
+		} // library marker tpLink.tpl_dev_common, line 436
+		if (currDataValues.plugId != null) { // library marker tpLink.tpl_dev_common, line 437
+			updateDataValue("deviceId", currDataValues.plugId) // library marker tpLink.tpl_dev_common, line 438
+		} // library marker tpLink.tpl_dev_common, line 439
+		if (DEV_TYPE == "Dimming Switch" || DEV_TYPE == "Parent" // library marker tpLink.tpl_dev_common, line 440
+		    || DEV_TYPE == "Plug Switch") { // library marker tpLink.tpl_dev_common, line 441
+			updateDataValue("hasLed", "true") // library marker tpLink.tpl_dev_common, line 442
+			String ledRule = device.currentValue("led") // library marker tpLink.tpl_dev_common, line 443
+			device.updateSetting("ledRule", [type: "enum", value: ledRule]) // library marker tpLink.tpl_dev_common, line 444
+		} // library marker tpLink.tpl_dev_common, line 445
+		updateDataValue("manufacturer", "kasa") // library marker tpLink.tpl_dev_common, line 446
+		String feature = currDataValues.feature // library marker tpLink.tpl_dev_common, line 447
+		if (feature != null && (feature.contains("color") || feature.contains("light"))) { // library marker tpLink.tpl_dev_common, line 448
+			updateDataValue("ctHigh", "6500") // library marker tpLink.tpl_dev_common, line 449
+			updateDataValue("ctLow", "2500") // library marker tpLink.tpl_dev_common, line 450
+		} // library marker tpLink.tpl_dev_common, line 451
+		if (currSettings.emFunction) { // library marker tpLink.tpl_dev_common, line 452
+			def emEnable = false // library marker tpLink.tpl_dev_common, line 453
+			updateDataValue("isEm", "true") // library marker tpLink.tpl_dev_common, line 454
+			if (currSettings.emFunction == true) { emEnable = true } // library marker tpLink.tpl_dev_common, line 455
+			device.updateSetting("emEnable", [type: "bool", value: emEnable]) // library marker tpLink.tpl_dev_common, line 456
+		} // library marker tpLink.tpl_dev_common, line 457
+	//	Create new single call baseUrl. // library marker tpLink.tpl_dev_common, line 458
+		String pollInt = state.pollInterval	//	Value x minutes, x seconds // library marker tpLink.tpl_dev_common, line 459
+		device.updateSetting("systemPoll", [type: "enum", value: pollInt]) // library marker tpLink.tpl_dev_common, line 460
+		if (currSettings.transition_Time) { // library marker tpLink.tpl_dev_common, line 461
+			device.updateSetting("transTime", [type: "number", value: currSettings.transition_Time]) // library marker tpLink.tpl_dev_common, line 462
+		} // library marker tpLink.tpl_dev_common, line 463
+		if (currSettings.gentleOn) { // library marker tpLink.tpl_dev_common, line 464
+			def gentOn = currSettings.gentleOn.toInteger() // library marker tpLink.tpl_dev_common, line 465
+			int newTransTime = ((500 + gentOn) / 1000).toInteger() // library marker tpLink.tpl_dev_common, line 466
+			device.updateSetting("transTime", [type: "number", value: newTransTime]) // library marker tpLink.tpl_dev_common, line 467
+		} // library marker tpLink.tpl_dev_common, line 468
+		respData << [dataValue_settings: "updated to 2.5.3"] // library marker tpLink.tpl_dev_common, line 469
 
-	unschedule() // library marker tpLink.tpl_dev_common, line 412
-	logInfo("EXECUTING ONE-TIME CONVERSION: kasa Integration to kasaTapoIntegration") // library marker tpLink.tpl_dev_common, line 413
-	log.warn "This update will not correct IP issues if it is a local LAN issue." // library marker tpLink.tpl_dev_common, line 414
-	log.warn "CHECK YOUR DEVICE AND RUN CONFIGURATION IF THERE ARE ISSUES." // library marker tpLink.tpl_dev_common, line 415
-	Map respData = [method: "version_2_5_3_update"] // library marker tpLink.tpl_dev_common, line 416
-	Map currDataValues = device.getData() // library marker tpLink.tpl_dev_common, line 417
-	Map currSettings = settings // library marker tpLink.tpl_dev_common, line 418
-//	Instrumentation	for test // library marker tpLink.tpl_dev_common, line 419
-//log.debug "currDataValues: $currDataValues" // library marker tpLink.tpl_dev_common, line 420
-//log.debug "currSettings: $currSettings" // library marker tpLink.tpl_dev_common, line 421
-	//	Add new dataValues // library marker tpLink.tpl_dev_common, line 422
-	updateDataValue("api", "iot") // library marker tpLink.tpl_dev_common, line 423
-	updateDataValue("protocol", "xor") // library marker tpLink.tpl_dev_common, line 424
-	updateDataValue("manufacturer", "kasa") // library marker tpLink.tpl_dev_common, line 425
-	//	use deviceId for all devices (vice plugId for multiplugs. // library marker tpLink.tpl_dev_common, line 426
-	if (currDataValues.plugId != null) { // library marker tpLink.tpl_dev_common, line 427
-		updateDataValue("deviceId", currDataValues.plugId) // library marker tpLink.tpl_dev_common, line 428
-	} // library marker tpLink.tpl_dev_common, line 429
-	//	remove command setLed in favor of a preference that // library marker tpLink.tpl_dev_common, line 430
-	//	keys off of data value. // library marker tpLink.tpl_dev_common, line 431
-	if (DEV_TYPE == "Dimming Switch" || DEV_TYPE == "Parent" // library marker tpLink.tpl_dev_common, line 432
-	    || DEV_TYPE == "Plug Switch") { // library marker tpLink.tpl_dev_common, line 433
-		updateDataValue("hasLed", "true") // library marker tpLink.tpl_dev_common, line 434
-		String ledRule = device.currentValue("led") // library marker tpLink.tpl_dev_common, line 435
-		device.updateSetting("ledRule", [type: "enum", value: ledRule]) // library marker tpLink.tpl_dev_common, line 436
-	} // library marker tpLink.tpl_dev_common, line 437
-	//	remove dataValue feature to allow direct call of // library marker tpLink.tpl_dev_common, line 438
-	//	ctHigh, ctLow, and isEm // library marker tpLink.tpl_dev_common, line 439
-	String feature = currDataValues.feature // library marker tpLink.tpl_dev_common, line 440
-	if (feature.contains("color") || feature.contains("light")) { // library marker tpLink.tpl_dev_common, line 441
-		updateDataValue("ctHigh", "6500") // library marker tpLink.tpl_dev_common, line 442
-		updateDataValue("ctLow", "2500") // library marker tpLink.tpl_dev_common, line 443
-	} // library marker tpLink.tpl_dev_common, line 444
-	if (currSettings.emFunction != null) { // library marker tpLink.tpl_dev_common, line 445
-		updateDataValue("isEm", "true") // library marker tpLink.tpl_dev_common, line 446
-	} // library marker tpLink.tpl_dev_common, line 447
-	//	Create new single call baseUrl. // library marker tpLink.tpl_dev_common, line 448
-	String baseUrl = "${currDataValues.deviceIP}:${currDataValues.devicePort}" // library marker tpLink.tpl_dev_common, line 449
-	updateDataValue("baseUrl", baseUrl) // library marker tpLink.tpl_dev_common, line 450
-	respData << [dataValues: "updated to 2.5.3"] // library marker tpLink.tpl_dev_common, line 451
+		//	Remove reduntant dataValues // library marker tpLink.tpl_dev_common, line 471
+		removeDataValue("deviceIP") // library marker tpLink.tpl_dev_common, line 472
+		removeDataValue("devicePort") // library marker tpLink.tpl_dev_common, line 473
+		removeDataValue("plugId") // library marker tpLink.tpl_dev_common, line 474
+		removeDataValue("feature") // library marker tpLink.tpl_dev_common, line 475
+		removeDataValue("emFunction") // library marker tpLink.tpl_dev_common, line 476
+		respData << [redundantDataValues: "removed"] // library marker tpLink.tpl_dev_common, line 477
+		//	Remove redundnat settings // library marker tpLink.tpl_dev_common, line 478
+		device.removeSetting("transition_Time") // library marker tpLink.tpl_dev_common, line 479
+		device.removeSetting("gentleOn") // library marker tpLink.tpl_dev_common, line 480
+		device.removeSetting("gentleOff") // library marker tpLink.tpl_dev_common, line 481
+		device.removeSetting("syncBulbs") // library marker tpLink.tpl_dev_common, line 482
+		device.removeSetting("manualIp") // library marker tpLink.tpl_dev_common, line 483
+		device.removeSetting("manualPort") // library marker tpLink.tpl_dev_common, line 484
+		device.removeSetting("nameSync") // library marker tpLink.tpl_dev_common, line 485
+		device.removeSetting("rebootDev") // library marker tpLink.tpl_dev_common, line 486
+		device.removeSetting("fadeOn") // library marker tpLink.tpl_dev_common, line 487
+		device.removeSetting("fadeOff") // library marker tpLink.tpl_dev_common, line 488
+		device.removeSetting("longPress") // library marker tpLink.tpl_dev_common, line 489
+		device.removeSetting("doubleClick")	 // library marker tpLink.tpl_dev_common, line 490
+		respData << [redundantSettings: "removed"] // library marker tpLink.tpl_dev_common, line 491
+		//	Remove redundated states // library marker tpLink.tpl_dev_common, line 492
+		state.remove("pollInterval") // library marker tpLink.tpl_dev_common, line 493
+		respData << [redundantStates: "removed"] // library marker tpLink.tpl_dev_common, line 494
+		//	Done at end to force run with a configure if there is // library marker tpLink.tpl_dev_common, line 495
+		//	a logic error causing failure. // library marker tpLink.tpl_dev_common, line 496
+		updateDataValue("version", version()) // library marker tpLink.tpl_dev_common, line 497
 
-	//	Update / create new preferences map, // library marker tpLink.tpl_dev_common, line 453
-	//	convert poll interval from command and state to setting // library marker tpLink.tpl_dev_common, line 454
-	String pollInt = state.pollInterval	//	Value x minutes, x seconds // library marker tpLink.tpl_dev_common, line 455
-	device.updateSetting("systemPoll", [type: "enum", value: pollInt]) // library marker tpLink.tpl_dev_common, line 456
-	if (currSettings.emFunction) { // library marker tpLink.tpl_dev_common, line 457
-		def emEnable = false // library marker tpLink.tpl_dev_common, line 458
-		if (currSettings.emFunction == true) { emEnable = true } // library marker tpLink.tpl_dev_common, line 459
-		device.updateSetting("emEnable", [type: "bool", value: emEnable]) // library marker tpLink.tpl_dev_common, line 460
-	} // library marker tpLink.tpl_dev_common, line 461
-	//	avoid confusion with device parameter transition_time and driver data. // library marker tpLink.tpl_dev_common, line 462
-	if (currSettings.transition_Time) { // library marker tpLink.tpl_dev_common, line 463
-		device.updateSetting("transTime", [type: "number", value: currSettings.transition_Time]) // library marker tpLink.tpl_dev_common, line 464
-	} // library marker tpLink.tpl_dev_common, line 465
-	//	simplify settings. now one transTime for all device types. // library marker tpLink.tpl_dev_common, line 466
-	if (currSettings.gentleOn) { // library marker tpLink.tpl_dev_common, line 467
-		def gentOn = currSettings.gentleOn.toInteger() // library marker tpLink.tpl_dev_common, line 468
-		int newTransTime = ((500 + gentOn) / 1000).toInteger() // library marker tpLink.tpl_dev_common, line 469
-		device.updateSetting("transTime", [type: "number", value: newTransTime]) // library marker tpLink.tpl_dev_common, line 470
-	} // library marker tpLink.tpl_dev_common, line 471
-	updateDataValue("version", version()) // library marker tpLink.tpl_dev_common, line 472
-	respData << [preferences: "updated to 2.5.3"] // library marker tpLink.tpl_dev_common, line 473
-
-//	Remove reduntant dataValues // library marker tpLink.tpl_dev_common, line 475
-	removeDataValue("deviceIP") // library marker tpLink.tpl_dev_common, line 476
-	removeDataValue("devicePort") // library marker tpLink.tpl_dev_common, line 477
-	removeDataValue("plugId") // library marker tpLink.tpl_dev_common, line 478
-	removeDataValue("feature") // library marker tpLink.tpl_dev_common, line 479
-	removeDataValue("emFunction") // library marker tpLink.tpl_dev_common, line 480
-	respData << [redundantDataValues: "removed"] // library marker tpLink.tpl_dev_common, line 481
-
-//	Remove redundnat settings // library marker tpLink.tpl_dev_common, line 483
-	device.removeSetting("transition_Time") // library marker tpLink.tpl_dev_common, line 484
-	device.removeSetting("gentleOn") // library marker tpLink.tpl_dev_common, line 485
-	device.removeSetting("gentleOff") // library marker tpLink.tpl_dev_common, line 486
-	device.removeSetting("syncBulbs") // library marker tpLink.tpl_dev_common, line 487
-	device.removeSetting("manualIp") // library marker tpLink.tpl_dev_common, line 488
-	device.removeSetting("manualPort") // library marker tpLink.tpl_dev_common, line 489
-	device.removeSetting("nameSync") // library marker tpLink.tpl_dev_common, line 490
-	device.removeSetting("rebootDev") // library marker tpLink.tpl_dev_common, line 491
-	device.removeSetting("fadeOn") // library marker tpLink.tpl_dev_common, line 492
-	device.removeSetting("fadeOff") // library marker tpLink.tpl_dev_common, line 493
-	device.removeSetting("longPress") // library marker tpLink.tpl_dev_common, line 494
-	device.removeSetting("doubleClick")	 // library marker tpLink.tpl_dev_common, line 495
-	respData << [redundantSettings: "removed"] // library marker tpLink.tpl_dev_common, line 496
-
-//	Remove redundated states // library marker tpLink.tpl_dev_common, line 498
-	state.remove("pollInterval") // library marker tpLink.tpl_dev_common, line 499
-	respData << [redundantStates: "removed"] // library marker tpLink.tpl_dev_common, line 500
-
-	runIn(5, updated) // library marker tpLink.tpl_dev_common, line 502
-	logInfo(respData) // library marker tpLink.tpl_dev_common, line 503
-} // library marker tpLink.tpl_dev_common, line 504
+		runIn(5, updated) // library marker tpLink.tpl_dev_common, line 499
+		logInfo(respData) // library marker tpLink.tpl_dev_common, line 500
+	} // library marker tpLink.tpl_dev_common, line 501
+} // library marker tpLink.tpl_dev_common, line 502
 
 // ~~~~~ end include (1076) tpLink.tpl_dev_common ~~~~~
 
