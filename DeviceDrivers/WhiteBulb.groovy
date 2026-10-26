@@ -1044,38 +1044,40 @@ def verUpdate_2_5_3() { // library marker tpLink.tpl_dev_common, line 419
 		} // library marker tpLink.tpl_dev_common, line 468
 		respData << [dataValue_settings: "updated to 2.5.3"] // library marker tpLink.tpl_dev_common, line 469
 
-		//	Remove reduntant dataValues // library marker tpLink.tpl_dev_common, line 471
-		removeDataValue("deviceIP") // library marker tpLink.tpl_dev_common, line 472
-		removeDataValue("devicePort") // library marker tpLink.tpl_dev_common, line 473
-		removeDataValue("plugId") // library marker tpLink.tpl_dev_common, line 474
-		removeDataValue("feature") // library marker tpLink.tpl_dev_common, line 475
-		removeDataValue("emFunction") // library marker tpLink.tpl_dev_common, line 476
-		respData << [redundantDataValues: "removed"] // library marker tpLink.tpl_dev_common, line 477
-		//	Remove redundnat settings // library marker tpLink.tpl_dev_common, line 478
-		device.removeSetting("transition_Time") // library marker tpLink.tpl_dev_common, line 479
-		device.removeSetting("gentleOn") // library marker tpLink.tpl_dev_common, line 480
-		device.removeSetting("gentleOff") // library marker tpLink.tpl_dev_common, line 481
-		device.removeSetting("syncBulbs") // library marker tpLink.tpl_dev_common, line 482
-		device.removeSetting("manualIp") // library marker tpLink.tpl_dev_common, line 483
-		device.removeSetting("manualPort") // library marker tpLink.tpl_dev_common, line 484
-		device.removeSetting("nameSync") // library marker tpLink.tpl_dev_common, line 485
-		device.removeSetting("rebootDev") // library marker tpLink.tpl_dev_common, line 486
-		device.removeSetting("fadeOn") // library marker tpLink.tpl_dev_common, line 487
-		device.removeSetting("fadeOff") // library marker tpLink.tpl_dev_common, line 488
-		device.removeSetting("longPress") // library marker tpLink.tpl_dev_common, line 489
-		device.removeSetting("doubleClick")	 // library marker tpLink.tpl_dev_common, line 490
-		respData << [redundantSettings: "removed"] // library marker tpLink.tpl_dev_common, line 491
-		//	Remove redundated states // library marker tpLink.tpl_dev_common, line 492
-		state.remove("pollInterval") // library marker tpLink.tpl_dev_common, line 493
-		respData << [redundantStates: "removed"] // library marker tpLink.tpl_dev_common, line 494
-		//	Done at end to force run with a configure if there is // library marker tpLink.tpl_dev_common, line 495
-		//	a logic error causing failure. // library marker tpLink.tpl_dev_common, line 496
-		updateDataValue("version", version()) // library marker tpLink.tpl_dev_common, line 497
+//DEFER removals until later firmware versions. Assures operation // library marker tpLink.tpl_dev_common, line 471
+//if user decides to revert to previous hub version. // library marker tpLink.tpl_dev_common, line 472
+		//	Remove reduntant dataValues // library marker tpLink.tpl_dev_common, line 473
+//		removeDataValue("deviceIP") // library marker tpLink.tpl_dev_common, line 474
+//		removeDataValue("devicePort") // library marker tpLink.tpl_dev_common, line 475
+//		removeDataValue("plugId") // library marker tpLink.tpl_dev_common, line 476
+//		removeDataValue("feature") // library marker tpLink.tpl_dev_common, line 477
+//		removeDataValue("emFunction") // library marker tpLink.tpl_dev_common, line 478
+//		respData << [redundantDataValues: "removed"] // library marker tpLink.tpl_dev_common, line 479
+		//	Remove redundnat settings // library marker tpLink.tpl_dev_common, line 480
+//		device.removeSetting("transition_Time") // library marker tpLink.tpl_dev_common, line 481
+//		device.removeSetting("gentleOn") // library marker tpLink.tpl_dev_common, line 482
+//		device.removeSetting("gentleOff") // library marker tpLink.tpl_dev_common, line 483
+//		device.removeSetting("syncBulbs") // library marker tpLink.tpl_dev_common, line 484
+		device.removeSetting("manualIp") // library marker tpLink.tpl_dev_common, line 485
+		device.removeSetting("manualPort") // library marker tpLink.tpl_dev_common, line 486
+//		device.removeSetting("nameSync") // library marker tpLink.tpl_dev_common, line 487
+//		device.removeSetting("rebootDev") // library marker tpLink.tpl_dev_common, line 488
+//		device.removeSetting("fadeOn") // library marker tpLink.tpl_dev_common, line 489
+//		device.removeSetting("fadeOff") // library marker tpLink.tpl_dev_common, line 490
+//		device.removeSetting("longPress") // library marker tpLink.tpl_dev_common, line 491
+//		device.removeSetting("doubleClick")	 // library marker tpLink.tpl_dev_common, line 492
+		respData << [redundantSettings: "removed"] // library marker tpLink.tpl_dev_common, line 493
+		//	Remove redundated states // library marker tpLink.tpl_dev_common, line 494
+//		state.remove("pollInterval") // library marker tpLink.tpl_dev_common, line 495
+		respData << [redundantStates: "removed"] // library marker tpLink.tpl_dev_common, line 496
+		//	Done at end to force run with a configure if there is // library marker tpLink.tpl_dev_common, line 497
+		//	a logic error causing failure. // library marker tpLink.tpl_dev_common, line 498
+		updateDataValue("version", version()) // library marker tpLink.tpl_dev_common, line 499
 
-		runIn(5, updated) // library marker tpLink.tpl_dev_common, line 499
-		logInfo(respData) // library marker tpLink.tpl_dev_common, line 500
-	} // library marker tpLink.tpl_dev_common, line 501
-} // library marker tpLink.tpl_dev_common, line 502
+		runIn(5, updated) // library marker tpLink.tpl_dev_common, line 501
+		logInfo(respData) // library marker tpLink.tpl_dev_common, line 502
+	} // library marker tpLink.tpl_dev_common, line 503
+} // library marker tpLink.tpl_dev_common, line 504
 
 // ~~~~~ end include (1076) tpLink.tpl_dev_common ~~~~~
 

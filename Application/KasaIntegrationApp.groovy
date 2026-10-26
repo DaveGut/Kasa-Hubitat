@@ -74,24 +74,25 @@ void hubStartupHandler() {
 def verUpdate_2_5_3() {
 	//	Update app for next run.
 	app.updateSetting("version", [type:"string", value: version()])
-	//	remove old settings
-	app.removeSetting("routerIp")
-	app.removeSetting("configureEnabled")
-	app.removeSetting("appSetup")
-	app.removeSetting("hostLimits")
 	app?.updateSetting("asInst", [type:"bool", value: true])
 	app?.updateSetting("instMatter", [type:"bool", value: true])
 	app?.updateSetting("infoLog", [type:"bool", value: true])
+	//	remove old settings
+//DEFER removeals until later firmware versions. Assures operation
+//if user decides to revert to previous hub version.
+//	app.removeSetting("routerIp")
+//	app.removeSetting("configureEnabled")
+//	app.removeSetting("appSetup")
+//	app.removeSetting("hostLimits")
 	//	update states
 	atomicState.iotDevices = [:]
 	atomicState.smartDevices = [:]
 	atomicState.findingSecure = false
 	atomicState.findingXor = false
 	atomicState.deviceWait = false
-	state.remove("devices")
-	state.remove("tapoDevices")
-	state.remove("hostArray")
-	state.remove("devices")
+//	state.remove("devices")
+//	state.remove("tapoDevices")
+//	state.remove("hostArray")
 	//	cause child devices to update
 	def children = getChildDevices()
 	children.each { child ->
