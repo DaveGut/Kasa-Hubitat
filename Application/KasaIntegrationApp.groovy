@@ -124,7 +124,7 @@ def uninstalled() {
 
 //	===== Start Page =====
 def startPage() {
-	if (settings.version != null) { verUpdate_2_5_3() }
+	if (settings.version == null) { verUpdate_2_5_3() }
 	log.info "startPage"
 	if (selectedRemoveDevices) {removeDevices()}
 	else if (selectedAddDevices) { addDevices() }
