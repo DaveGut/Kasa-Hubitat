@@ -69,7 +69,9 @@ def setColorLight(onOff, level, colorTemp, hue, saturation) {
 			sendEvent(name: "color", value: [:])
 			sendEvent(name: "RGB", value: [])
 		} else {
-			sendEvent(name: "colorMode", value: "COLOR")
+//	Error. colorMode is defined as RGB vice COLOR.
+//			sendEvent(name: "colorMode", value: "COLOR")
+			sendEvent(name: "colorMode", value: "RGB")
 			def colorName = convertHueToGenericColorName(hubHue)
 			sendEvent(name: "colorName", value: colorName)
 			Map color = [hue: hubHue, saturation: saturation, level: level]
