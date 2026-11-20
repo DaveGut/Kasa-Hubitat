@@ -22,6 +22,10 @@ metadata {
 			   )
 	{
 		capability "Light"
+		capability "Light Effects"
+		command "effectSet", [[name: "Name for effect.", type: "STRING"]]
+		command "effectCreate"
+		command "effectDelete", [[name: "Name for effect to delete.", type: "STRING"]]
 	}
 	preferences {
 		emPrefs()
@@ -91,6 +95,7 @@ def parse_get_device_info(devData) {
 
 //	===== Iot Methods =====
 def parse_system(devData) {
+	Map effect = devData.lighting_effect_state
 	def onOff = "on"
 	if (devData.on_off == 0) {
 		onOff = "off"
@@ -100,7 +105,101 @@ def parse_system(devData) {
 	int hue = devData.hue.toInteger()
 	int saturation = devData.saturation.toInteger()
 	int colorTemp = devData.color_temp.toInteger()
-	setColorLight(onOff, level, colorTemp, hue, saturation)
+	if (effect?.enable == 1 && onOff == "on") {
+		//	light_state keeps the last colour and brightness while an effect runs;
+		//	only lighting_effect_state shows the effect and the brightness it runs at.
+		sendEvent(name: "switch", value: onOff, type: state.eventType)
+		sendEvent(name: "level", value: effect.brightness ?: level)
+		sendEvent(name: "colorMode", value: "EFFECTS")
+		sendEvent(name: "effectName", value: effect.name)
+	} else {
+		setColorLight(onOff, level, colorTemp, hue, saturation)
+		if (effect) { sendEvent(name: "effectName", value: " ") }
+	}
+	if (device.currentValue("lightEffects") == null) { setLightEffects() }
+}
+
+//	===== Light Effects (iot api) =====
+//	Presets are the strip's own effects, captured with effectCreate into state.effectPresets.
+def effectSet(effName) {
+	Map effData = (state.effectPresets ?: []).find { it.name == effName?.trim() }
+	if (effData == null) {
+		logWarn("effectSet: ${effName} is not in effectPresets")
+		return
+	}
+	sendEffect(effData)
+}
+
+def setEffect(index) {
+	List presets = state.effectPresets ?: []
+	int i = index.toInteger()
+	if (i < 0 || i >= presets.size()) {
+		logWarn("setEffect: no preset ${index}")
+		return
+	}
+	sendEffect(presets[i])
+}
+
+def setNextEffect() { stepEffect(1) }
+
+def setPreviousEffect() { stepEffect(-1) }
+
+def stepEffect(int step) {
+	List presets = state.effectPresets ?: []
+	int i = presets.findIndexOf { it.name == device.currentValue("effectName") }
+	if (device.currentValue("colorMode") != "EFFECTS" || i == -1) {
+		logWarn("stepEffect: no preset effect is running")
+		return
+	}
+	sendEffect(presets[(i + step + presets.size()) % presets.size()])
+}
+
+def effectCreate() {
+	state.createEffect = true
+	sendEffectCmd([get_lighting_effect: [:]])
+}
+
+def effectDelete(effName) {
+	List presets = state.effectPresets ?: []
+	int i = presets.findIndexOf { it.name == effName?.trim() }
+	if (i == -1) {
+		logWarn("effectDelete: ${effName} is not in effectPresets")
+		return
+	}
+	presets.remove(i)
+	state.effectPresets = presets
+	setLightEffects()
+}
+
+def sendEffect(Map effData) { sendEffectCmd([set_lighting_effect: effData]) }
+
+def sendEffectCmd(Map effectCmd) {
+	if (getDataValue("api") != "iot") {
+		logWarn("sendEffectCmd: effects need the iot api, not ${getDataValue("api")}")
+		return
+	}
+	//	One request: the effect command, then the status that shows its result.
+	sendIotCmd(["smartlife.iot.lighting_effect": effectCmd, system: [get_sysinfo: [:]]], true)
+}
+
+def parse_lighting_effect(devData) {
+	if (devData.get_lighting_effect && state.createEffect) {
+		state.remove("createEffect")
+		Map effData = devData.get_lighting_effect
+		List presets = state.effectPresets ?: []
+		if (effData.name && !presets.any { it.name == effData.name }) {
+			state.effectPresets = presets + [effData]
+			setLightEffects()
+		}
+	} else if (devData.set_lighting_effect && devData.set_lighting_effect.err_code != 0) {
+		logWarn("parse_lighting_effect: effect not set: ${devData.set_lighting_effect}")
+	}
+}
+
+def setLightEffects() {
+	Map names = [:]
+	(state.effectPresets ?: []).eachWithIndex { effData, i -> names[i] = effData.name }
+	sendEvent(name: "lightEffects", value: new groovy.json.JsonBuilder(names).toString())
 }
 
 //	===== Include Libraries =====
@@ -1560,7 +1659,9 @@ void distIotData(key, devData) { // library marker tpLink.tpl_api_iot, line 108
 					parseNameUpdate(devData) // library marker tpLink.tpl_api_iot, line 117
 				} // library marker tpLink.tpl_api_iot, line 118
 				if (devData.light_state) { // library marker tpLink.tpl_api_iot, line 119
+					Map effect = devData.lighting_effect_state	//	Light Effects: strips report effects beside light_state
 					devData = devData.light_state // library marker tpLink.tpl_api_iot, line 120
+					if (effect) { devData = devData + [lighting_effect_state: effect] }	//	Light Effects
 				} // library marker tpLink.tpl_api_iot, line 121
 				parse_system(devData) // library marker tpLink.tpl_api_iot, line 122
 			} // library marker tpLink.tpl_api_iot, line 123
@@ -1583,6 +1684,9 @@ void distIotData(key, devData) { // library marker tpLink.tpl_api_iot, line 108
 		case "emeter": // library marker tpLink.tpl_api_iot, line 140
 			parse_emeter(devData) // library marker tpLink.tpl_api_iot, line 141
 			break // library marker tpLink.tpl_api_iot, line 142
+		case "smartlife.iot.lighting_effect":	//	Light Effects
+			parse_lighting_effect(devData)	//	Light Effects
+			break	//	Light Effects
 		case "smartlife.iot.common.system": // library marker tpLink.tpl_api_iot, line 143
 			if (devData.reboot) { // library marker tpLink.tpl_api_iot, line 144
 				runIn(10, updated)  // library marker tpLink.tpl_api_iot, line 145
