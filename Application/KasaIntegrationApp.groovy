@@ -27,7 +27,7 @@ preferences {
 	page(name: "addDevicesPage")
 	page(name: "removeDevicesPage")
 }
-
+ 
 void installed() {
 	//	Initialize settings on installation
 	def hub = location.hubs[0]
@@ -169,6 +169,7 @@ String startPgInst() {
 	String quickSP = "Install Kasa/Tapo Device and prepare for Hubitat control."
 	quickSP += "\n\ta.\tKasa/Tapo Phone App: Install device."
 	quickSP += "\n\tb.\tKasa/Tapo Phone App: Turn on Third Party Compatibility."
+	quickSP +=	"\n\t\tIf recently installed, toggle This OFF then ON."
 	quickSP += "\n\tc.\tKasa/Tapo Phone App: Exercise device to be installed."
 	quickSP += "\n\td.\tKasa/Tapo Phone App: Turn OFF Multi-Factor Authentication."
 	quickSP += "\n\te.\tYour WiFiRouter: Set DHCP Reservation for Device."
@@ -665,71 +666,72 @@ void getIotDeviceData(cmdResp, baseUrl, protocol) { // library marker tpLink.tpl
 			def isColor = cmdResp.is_color // library marker tpLink.tpl_app_xor, line 125
 			if (descr.contains("Light Strip")) { // library marker tpLink.tpl_app_xor, line 126
 				type = "Light Strip" // library marker tpLink.tpl_app_xor, line 127
-			} else { // library marker tpLink.tpl_app_xor, line 128
-				if (isCt == 0 && isColor == 0) { // library marker tpLink.tpl_app_xor, line 129
-					type = "Mono Bulb" // library marker tpLink.tpl_app_xor, line 130
-				} else if (isCt == 1 && isColor == 0) { // library marker tpLink.tpl_app_xor, line 131
-						device << [ctLow: 2700, ctHigh: 6500] // library marker tpLink.tpl_app_xor, line 132
-					type = "CT Bulb" // library marker tpLink.tpl_app_xor, line 133
-				} else if (isCt ==1 && isColor == 1) { // library marker tpLink.tpl_app_xor, line 134
-					device << [ctLow: 2700, ctHigh: 6500] // library marker tpLink.tpl_app_xor, line 135
-					type = "Color Bulb" // library marker tpLink.tpl_app_xor, line 136
-				} // library marker tpLink.tpl_app_xor, line 137
-			} // library marker tpLink.tpl_app_xor, line 138
-			device << [isEm: true, type: type, alias: cmdResp.alias,  // library marker tpLink.tpl_app_xor, line 139
-					   deviceId: cmdResp.deviceId] // library marker tpLink.tpl_app_xor, line 140
-				addDeviceData(dni, device) // library marker tpLink.tpl_app_xor, line 141
-			break // library marker tpLink.tpl_app_xor, line 142
-		default:  // library marker tpLink.tpl_app_xor, line 143
-			atomicState.deviceWait = false  // library marker tpLink.tpl_app_xor, line 144
-			logData << [ "${cmdResp.alias}": "kasaType ${kasaType} is not supported" ]  // library marker tpLink.tpl_app_xor, line 145
-			logDebug(logData) // library marker tpLink.tpl_app_xor, line 146
-			break // library marker tpLink.tpl_app_xor, line 147
-	} // library marker tpLink.tpl_app_xor, line 148
-	logDebug(logData) // library marker tpLink.tpl_app_xor, line 149
-} // library marker tpLink.tpl_app_xor, line 150
+				device << [ctLow: 2700, ctHigh: 6500] // library marker tpLink.tpl_app_xor, line 128
+			} else { // library marker tpLink.tpl_app_xor, line 129
+				if (isCt == 0 && isColor == 0) { // library marker tpLink.tpl_app_xor, line 130
+					type = "Mono Bulb" // library marker tpLink.tpl_app_xor, line 131
+				} else if (isCt == 1 && isColor == 0) { // library marker tpLink.tpl_app_xor, line 132
+						device << [ctLow: 2700, ctHigh: 6500] // library marker tpLink.tpl_app_xor, line 133
+					type = "CT Bulb" // library marker tpLink.tpl_app_xor, line 134
+				} else if (isCt ==1 && isColor == 1) { // library marker tpLink.tpl_app_xor, line 135
+					device << [ctLow: 2700, ctHigh: 6500] // library marker tpLink.tpl_app_xor, line 136
+					type = "Color Bulb" // library marker tpLink.tpl_app_xor, line 137
+				} // library marker tpLink.tpl_app_xor, line 138
+			} // library marker tpLink.tpl_app_xor, line 139
+			device << [isEm: true, type: type, alias: cmdResp.alias,  // library marker tpLink.tpl_app_xor, line 140
+					   deviceId: cmdResp.deviceId] // library marker tpLink.tpl_app_xor, line 141
+				addDeviceData(dni, device) // library marker tpLink.tpl_app_xor, line 142
+			break // library marker tpLink.tpl_app_xor, line 143
+		default:  // library marker tpLink.tpl_app_xor, line 144
+			atomicState.deviceWait = false  // library marker tpLink.tpl_app_xor, line 145
+			logData << [ "${cmdResp.alias}": "kasaType ${kasaType} is not supported" ]  // library marker tpLink.tpl_app_xor, line 146
+			logDebug(logData) // library marker tpLink.tpl_app_xor, line 147
+			break // library marker tpLink.tpl_app_xor, line 148
+	} // library marker tpLink.tpl_app_xor, line 149
+	logDebug(logData) // library marker tpLink.tpl_app_xor, line 150
+} // library marker tpLink.tpl_app_xor, line 151
 
-void quickFindXorData(response) { // library marker tpLink.tpl_app_xor, line 152
-	unschedule("udpTimeout") // library marker tpLink.tpl_app_xor, line 153
-	atomicState.findingXor = false // library marker tpLink.tpl_app_xor, line 154
-	Map logData = [method: "quickFindXorData"] // library marker tpLink.tpl_app_xor, line 155
-	if (response == "udpTimeout") { // library marker tpLink.tpl_app_xor, line 156
-		logData << [response: "udpTimeout", status: "No devices found"] // library marker tpLink.tpl_app_xor, line 157
-	} else { // library marker tpLink.tpl_app_xor, line 158
-		def foundDevs = 0 // library marker tpLink.tpl_app_xor, line 159
-		if (response instanceof Map) { // library marker tpLink.tpl_app_xor, line 160
-			foundDevs += 1 // library marker tpLink.tpl_app_xor, line 161
-			def respData = parseUdp(response, "xor") // library marker tpLink.tpl_app_xor, line 162
-			updateXorChild(respData) // library marker tpLink.tpl_app_xor, line 163
-		} else { // library marker tpLink.tpl_app_xor, line 164
-   			 response.each { // library marker tpLink.tpl_app_xor, line 165
-        		foundDevs += 1 // library marker tpLink.tpl_app_xor, line 166
-        		Map respData = parseUdp(it, "xor") // library marker tpLink.tpl_app_xor, line 167
-        		updateXorChild(respData) // library marker tpLink.tpl_app_xor, line 168
-    		} // library marker tpLink.tpl_app_xor, line 169
-		} // library marker tpLink.tpl_app_xor, line 170
-		logData << [devicesFound: foundDevs, status: "allSentToParse"] // library marker tpLink.tpl_app_xor, line 171
-	} // library marker tpLink.tpl_app_xor, line 172
-	logInfo(logData)	 // library marker tpLink.tpl_app_xor, line 173
-} // library marker tpLink.tpl_app_xor, line 174
+void quickFindXorData(response) { // library marker tpLink.tpl_app_xor, line 153
+	unschedule("udpTimeout") // library marker tpLink.tpl_app_xor, line 154
+	atomicState.findingXor = false // library marker tpLink.tpl_app_xor, line 155
+	Map logData = [method: "quickFindXorData"] // library marker tpLink.tpl_app_xor, line 156
+	if (response == "udpTimeout") { // library marker tpLink.tpl_app_xor, line 157
+		logData << [response: "udpTimeout", status: "No devices found"] // library marker tpLink.tpl_app_xor, line 158
+	} else { // library marker tpLink.tpl_app_xor, line 159
+		def foundDevs = 0 // library marker tpLink.tpl_app_xor, line 160
+		if (response instanceof Map) { // library marker tpLink.tpl_app_xor, line 161
+			foundDevs += 1 // library marker tpLink.tpl_app_xor, line 162
+			def respData = parseUdp(response, "xor") // library marker tpLink.tpl_app_xor, line 163
+			updateXorChild(respData) // library marker tpLink.tpl_app_xor, line 164
+		} else { // library marker tpLink.tpl_app_xor, line 165
+   			 response.each { // library marker tpLink.tpl_app_xor, line 166
+        		foundDevs += 1 // library marker tpLink.tpl_app_xor, line 167
+        		Map respData = parseUdp(it, "xor") // library marker tpLink.tpl_app_xor, line 168
+        		updateXorChild(respData) // library marker tpLink.tpl_app_xor, line 169
+    		} // library marker tpLink.tpl_app_xor, line 170
+		} // library marker tpLink.tpl_app_xor, line 171
+		logData << [devicesFound: foundDevs, status: "allSentToParse"] // library marker tpLink.tpl_app_xor, line 172
+	} // library marker tpLink.tpl_app_xor, line 173
+	logInfo(logData)	 // library marker tpLink.tpl_app_xor, line 174
+} // library marker tpLink.tpl_app_xor, line 175
 
-void updateXorChild(respData) { // library marker tpLink.tpl_app_xor, line 176
-	if (respData.status == "ok") { // library marker tpLink.tpl_app_xor, line 177
-		Map sysInfo = respData?.cmdResp?.system?.get_sysinfo // library marker tpLink.tpl_app_xor, line 178
-		if (!sysInfo) { // library marker tpLink.tpl_app_xor, line 179
-			logDebug("updateXorChild: [status: missingSysInfo]") // library marker tpLink.tpl_app_xor, line 180
-			return // library marker tpLink.tpl_app_xor, line 181
-		} // library marker tpLink.tpl_app_xor, line 182
-		String dni = sysInfo.mic_mac // library marker tpLink.tpl_app_xor, line 183
-		if (sysInfo.mac) { dni = sysInfo.mac.replace(/:/, "") } // library marker tpLink.tpl_app_xor, line 184
-		String baseUrl = "${respData.ip}:${respData.port}" // library marker tpLink.tpl_app_xor, line 185
-		Map devData = [protocol: "xor", baseUrl: baseUrl, version: version()] // library marker tpLink.tpl_app_xor, line 186
-		def child = getChildDevice(dni) // library marker tpLink.tpl_app_xor, line 187
-		if (child) { child.updateDeviceData(devData) } // library marker tpLink.tpl_app_xor, line 188
-	} else { // library marker tpLink.tpl_app_xor, line 189
-		logDebug("updateXorChild: [error: not LAN_TYPE_UDPCLIENT]") // library marker tpLink.tpl_app_xor, line 190
-	} // library marker tpLink.tpl_app_xor, line 191
-} // library marker tpLink.tpl_app_xor, line 192
+void updateXorChild(respData) { // library marker tpLink.tpl_app_xor, line 177
+	if (respData.status == "ok") { // library marker tpLink.tpl_app_xor, line 178
+		Map sysInfo = respData?.cmdResp?.system?.get_sysinfo // library marker tpLink.tpl_app_xor, line 179
+		if (!sysInfo) { // library marker tpLink.tpl_app_xor, line 180
+			logDebug("updateXorChild: [status: missingSysInfo]") // library marker tpLink.tpl_app_xor, line 181
+			return // library marker tpLink.tpl_app_xor, line 182
+		} // library marker tpLink.tpl_app_xor, line 183
+		String dni = sysInfo.mic_mac // library marker tpLink.tpl_app_xor, line 184
+		if (sysInfo.mac) { dni = sysInfo.mac.replace(/:/, "") } // library marker tpLink.tpl_app_xor, line 185
+		String baseUrl = "${respData.ip}:${respData.port}" // library marker tpLink.tpl_app_xor, line 186
+		Map devData = [protocol: "xor", baseUrl: baseUrl, version: version()] // library marker tpLink.tpl_app_xor, line 187
+		def child = getChildDevice(dni) // library marker tpLink.tpl_app_xor, line 188
+		if (child) { child.updateDeviceData(devData) } // library marker tpLink.tpl_app_xor, line 189
+	} else { // library marker tpLink.tpl_app_xor, line 190
+		logDebug("updateXorChild: [error: not LAN_TYPE_UDPCLIENT]") // library marker tpLink.tpl_app_xor, line 191
+	} // library marker tpLink.tpl_app_xor, line 192
+} // library marker tpLink.tpl_app_xor, line 193
 
 // ~~~~~ end include (1068) tpLink.tpl_app_xor ~~~~~
 
@@ -779,281 +781,287 @@ void getSecureDiscData(response) { // library marker tpLink.tpl_app_secure, line
 				"[status: invalidDiscoveryPayload, " +  // library marker tpLink.tpl_app_secure, line 43
 				"ip: ${discData?.ip}, payload: ${payload}]") // library marker tpLink.tpl_app_secure, line 44
 			return // library marker tpLink.tpl_app_secure, line 45
-		} // library marker tpLink.tpl_app_secure, line 46
+		}		 // library marker tpLink.tpl_app_secure, line 46
 		String model = payload.device_model // library marker tpLink.tpl_app_secure, line 47
 		String protocol = payload.mgt_encrypt_schm.encrypt_type.toLowerCase() // library marker tpLink.tpl_app_secure, line 48
-		//	Handle encryption_type = TPAP and prefer_tpap = true by hard coding tpap to klap. // library marker tpLink.tpl_app_secure, line 49
-		if (protocol == "tpap") { protocol = "klap" } // library marker tpLink.tpl_app_secure, line 50
-		String devType = payload.device_type // library marker tpLink.tpl_app_secure, line 51
-		String dni = payload.mac.replaceAll("-", "") // library marker tpLink.tpl_app_secure, line 52
-		Map logData =[method: "getSecureDiscData", devType: devType, model: model,  // library marker tpLink.tpl_app_secure, line 53
-					  dni: dni, protocol: protocol] // library marker tpLink.tpl_app_secure, line 54
-		List supTypes = ["SMART.TAPOBULB", "SMART.TAPOPLUG", "SMART.TAPOSWITCH", // library marker tpLink.tpl_app_secure, line 55
-					 	"SMART.KASAPLUG", "SMART.KASASWITCH", "SMART.KASABULB", // library marker tpLink.tpl_app_secure, line 56
-						 "IOT.SMARTPLUGSWITCH", "IOT.SMARTBULB"] // library marker tpLink.tpl_app_secure, line 57
-		if (!supTypes.contains(devType)) { // library marker tpLink.tpl_app_secure, line 58
-			logData << [status: "Ignored. Unsupported device."] // library marker tpLink.tpl_app_secure, line 59
-			logInfo(logData) // library marker tpLink.tpl_app_secure, line 60
-			atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 61
-		} else if (atomicState.iotDevices?.containsKey(dni)  // library marker tpLink.tpl_app_secure, line 62
-				   && getChildDevice(dni)) { // library marker tpLink.tpl_app_secure, line 63
-			//	Design to preclude unnecessary processing and also device protocol // library marker tpLink.tpl_app_secure, line 64
-			//	ping-pong. For Smart devices, if it has already been found on this  // library marker tpLink.tpl_app_secure, line 65
-			//	application session, do not add. // library marker tpLink.tpl_app_secure, line 66
-			logData << [status: "Ignored! Found in iotDevices and already installed."] // library marker tpLink.tpl_app_secure, line 67
-			logInfo(logData) // library marker tpLink.tpl_app_secure, line 68
-			atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 69
-		} else if (atomicState.smartDevices?.containsKey(dni)) { // library marker tpLink.tpl_app_secure, line 70
-			logData << [status: "Ignored. Aready in state.smartDevices."] // library marker tpLink.tpl_app_secure, line 71
-			logInfo(logData) // library marker tpLink.tpl_app_secure, line 72
-			atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 73
-		} else { // library marker tpLink.tpl_app_secure, line 74
-			Map devData = [:] // library marker tpLink.tpl_app_secure, line 75
-			def api = "smart" // library marker tpLink.tpl_app_secure, line 76
-			if (devType.contains("IOT")) { api = "iot" } // library marker tpLink.tpl_app_secure, line 77
-			String httpPort = payload.mgt_encrypt_schm.http_port // library marker tpLink.tpl_app_secure, line 78
-			String httpStr = "http://" // library marker tpLink.tpl_app_secure, line 79
-			String httpPath = "/app" // library marker tpLink.tpl_app_secure, line 80
-			if (payload.mgt_encrypt_schm.is_support_https) { httpStr = "https://" } // library marker tpLink.tpl_app_secure, line 81
-			String baseUrl = httpStr + discData.ip + ":" + httpPort + httpPath // library marker tpLink.tpl_app_secure, line 82
-			devData << [type: devType, model: model, baseUrl: baseUrl, dni: dni, // library marker tpLink.tpl_app_secure, line 83
-						api: api, protocol: protocol] // library marker tpLink.tpl_app_secure, line 84
-//	CHANGE devData.protocol to simply protocol.  See protocol def above. // library marker tpLink.tpl_app_secure, line 85
-//			if (devData.protocol == "klap") { // library marker tpLink.tpl_app_secure, line 86
-			if (protocol == "klap") { // library marker tpLink.tpl_app_secure, line 87
-				klapHandshake(baseUrl, localHash, devData) // library marker tpLink.tpl_app_secure, line 88
-//			} else if (devData.protocol == "aes") { // library marker tpLink.tpl_app_secure, line 89
-			} else if (protocol == "aes") { // library marker tpLink.tpl_app_secure, line 90
-				aesHandshake(baseUrl, devData) // library marker tpLink.tpl_app_secure, line 91
-			} else { // library marker tpLink.tpl_app_secure, line 92
-				atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 93
-				logData << [status: "unsupportedProtocol: ${devData.protocol}"] // library marker tpLink.tpl_app_secure, line 94
-				logInfo(logData) // library marker tpLink.tpl_app_secure, line 95
-			} // library marker tpLink.tpl_app_secure, line 96
-		} // library marker tpLink.tpl_app_secure, line 97
-	} else { // library marker tpLink.tpl_app_secure, line 98
-		atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 99
-		Map logData = [method: "getSecureDiscData", status: "errorInParseUDP", discData: discData] // library marker tpLink.tpl_app_secure, line 100
-		logDebug(logData) // library marker tpLink.tpl_app_secure, line 101
-	} // library marker tpLink.tpl_app_secure, line 102
-} // library marker tpLink.tpl_app_secure, line 103
+		String devType = payload.device_type // library marker tpLink.tpl_app_secure, line 49
+		String dni = payload.mac.replaceAll("-", "") // library marker tpLink.tpl_app_secure, line 50
 
-void getSmartDeviceData(devData, cmdData) { // library marker tpLink.tpl_app_secure, line 105
-	Map logData = [method: "getSmartDeviceData"] // library marker tpLink.tpl_app_secure, line 106
-	Map device = [api: "smart", protocol: devData.protocol, baseUrl: """${devData.baseUrl}""", // library marker tpLink.tpl_app_secure, line 107
-				  model: devData.model] // library marker tpLink.tpl_app_secure, line 108
-	Map componentResponse = cmdData?.find { it.method == "component_nego" } // library marker tpLink.tpl_app_secure, line 109
-	Map deviceInfoResponse = cmdData?.find { it.method == "get_device_info" } // library marker tpLink.tpl_app_secure, line 110
-	List comps = componentResponse?.result?.component_list ?: [] // library marker tpLink.tpl_app_secure, line 111
-	Map cmdResp = deviceInfoResponse?.result // library marker tpLink.tpl_app_secure, line 112
-	if (!cmdResp) { // library marker tpLink.tpl_app_secure, line 113
-		atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 114
-		logDebug("getSmartDeviceData: [status: missingDeviceInfo]") // library marker tpLink.tpl_app_secure, line 115
-		return // library marker tpLink.tpl_app_secure, line 116
-	} // library marker tpLink.tpl_app_secure, line 117
+//	Handle encryption_type = TPAP and prefer_tpap = true by hard coding tpap to klap. // library marker tpLink.tpl_app_secure, line 52
+//	Will end when/if TPAP protol is developed. // library marker tpLink.tpl_app_secure, line 53
+		if (protocol == "tpap") { protocol = "klap" } // library marker tpLink.tpl_app_secure, line 54
+//	Special (test) case for IOT Devices that detect AES. Hopefully, an error. // library marker tpLink.tpl_app_secure, line 55
+		if (devType.contains("IOT") && protocol == "aes") { protocol = "klap" } // library marker tpLink.tpl_app_secure, line 56
+// // library marker tpLink.tpl_app_secure, line 57
 
-	def dni = devData.dni // library marker tpLink.tpl_app_secure, line 119
-	byte[] aliasBytes = cmdResp.nickname.decodeBase64() // library marker tpLink.tpl_app_secure, line 120
-	String alias = new String(aliasBytes) // library marker tpLink.tpl_app_secure, line 121
-	if (!(instMatter ?: false) && comps.find {it.id == "matter"}) { // library marker tpLink.tpl_app_secure, line 122
-		logData << ["${alias}": device, status: "Not added. Matter Install Not Selected"] // library marker tpLink.tpl_app_secure, line 123
-		atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 124
-	} else { // library marker tpLink.tpl_app_secure, line 125
-		def tpType = devData.type // library marker tpLink.tpl_app_secure, line 126
-		if (alias == "") { alias = devData.model } // library marker tpLink.tpl_app_secure, line 127
-		String manufacturer = "tapo" // library marker tpLink.tpl_app_secure, line 128
-		if (tpType.contains("KASA")) { manufacturer = "kasa" } // library marker tpLink.tpl_app_secure, line 129
-		device << [alias: alias, manufacturer: manufacturer, deviceId: cmdResp.device_id] // library marker tpLink.tpl_app_secure, line 130
-		def type = "unknown" // library marker tpLink.tpl_app_secure, line 131
-		if (tpType.contains("PLUG") || tpType.contains("SWITCH")) { // library marker tpLink.tpl_app_secure, line 132
-			type = "Plug Switch" // library marker tpLink.tpl_app_secure, line 133
-			if (comps.find { it.id == "control_child" }) { // library marker tpLink.tpl_app_secure, line 134
-				type = "Parent" // library marker tpLink.tpl_app_secure, line 135
-			} else if (comps.find{it.id=="dimmer"} || comps.find{it.id=="brightness"}) { // library marker tpLink.tpl_app_secure, line 136
-				type = "Dimming Switch" // library marker tpLink.tpl_app_secure, line 137
-			} // library marker tpLink.tpl_app_secure, line 138
-		} else if (tpType.contains("BULB")) { // library marker tpLink.tpl_app_secure, line 139
-			type = "Mono Bulb" // library marker tpLink.tpl_app_secure, line 140
-			if (comps.find { it.id == "light_strip" }) { // library marker tpLink.tpl_app_secure, line 141
-				type = "Light Strip" // library marker tpLink.tpl_app_secure, line 142
-			} else if (comps.find { it.id == "color" }) { // library marker tpLink.tpl_app_secure, line 143
-				type = "Color Bulb" // library marker tpLink.tpl_app_secure, line 144
-			} else if (comps.find { it.id == "color_temperature" } ) { // library marker tpLink.tpl_app_secure, line 145
-				type = "CT Bulb" // library marker tpLink.tpl_app_secure, line 146
-			} // library marker tpLink.tpl_app_secure, line 147
+		Map logData =[method: "getSecureDiscData", devType: devType, model: model,  // library marker tpLink.tpl_app_secure, line 59
+					  dni: dni, protocol: protocol] // library marker tpLink.tpl_app_secure, line 60
+		List supTypes = ["SMART.TAPOBULB", "SMART.TAPOPLUG", "SMART.TAPOSWITCH", // library marker tpLink.tpl_app_secure, line 61
+					 	"SMART.KASAPLUG", "SMART.KASASWITCH", "SMART.KASABULB", // library marker tpLink.tpl_app_secure, line 62
+						 "IOT.SMARTPLUGSWITCH", "IOT.SMARTBULB"] // library marker tpLink.tpl_app_secure, line 63
+		if (!supTypes.contains(devType)) { // library marker tpLink.tpl_app_secure, line 64
+			logData << [status: "Ignored. Unsupported device."] // library marker tpLink.tpl_app_secure, line 65
+			logInfo(logData) // library marker tpLink.tpl_app_secure, line 66
+			atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 67
+		} else if (atomicState.iotDevices?.containsKey(dni)  // library marker tpLink.tpl_app_secure, line 68
+				   && getChildDevice(dni)) { // library marker tpLink.tpl_app_secure, line 69
+			//	Design to preclude unnecessary processing and also device protocol // library marker tpLink.tpl_app_secure, line 70
+			//	ping-pong. For Smart devices, if it has already been found on this  // library marker tpLink.tpl_app_secure, line 71
+			//	application session, do not add. // library marker tpLink.tpl_app_secure, line 72
+			logData << [status: "Ignored! Found in iotDevices and already installed."] // library marker tpLink.tpl_app_secure, line 73
+			logInfo(logData) // library marker tpLink.tpl_app_secure, line 74
+			atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 75
+		} else if (atomicState.smartDevices?.containsKey(dni)) { // library marker tpLink.tpl_app_secure, line 76
+			logData << [status: "Ignored. Aready in state.smartDevices."] // library marker tpLink.tpl_app_secure, line 77
+			logInfo(logData) // library marker tpLink.tpl_app_secure, line 78
+			atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 79
+		} else { // library marker tpLink.tpl_app_secure, line 80
+			Map devData = [:] // library marker tpLink.tpl_app_secure, line 81
+			def api = "smart" // library marker tpLink.tpl_app_secure, line 82
+			if (devType.contains("IOT")) { api = "iot" } // library marker tpLink.tpl_app_secure, line 83
+			String httpPort = payload.mgt_encrypt_schm.http_port // library marker tpLink.tpl_app_secure, line 84
+			String httpStr = "http://" // library marker tpLink.tpl_app_secure, line 85
+			String httpPath = "/app" // library marker tpLink.tpl_app_secure, line 86
+			if (payload.mgt_encrypt_schm.is_support_https) { httpStr = "https://" } // library marker tpLink.tpl_app_secure, line 87
+			String baseUrl = httpStr + discData.ip + ":" + httpPort + httpPath // library marker tpLink.tpl_app_secure, line 88
+			devData << [type: devType, model: model, baseUrl: baseUrl, dni: dni, // library marker tpLink.tpl_app_secure, line 89
+						api: api, protocol: protocol] // library marker tpLink.tpl_app_secure, line 90
+//	CHANGE devData.protocol to simply protocol.  See protocol def above. // library marker tpLink.tpl_app_secure, line 91
+//			if (devData.protocol == "klap") { // library marker tpLink.tpl_app_secure, line 92
+			if (protocol == "klap") { // library marker tpLink.tpl_app_secure, line 93
+				klapHandshake(baseUrl, localHash, devData) // library marker tpLink.tpl_app_secure, line 94
+//			} else if (devData.protocol == "aes") { // library marker tpLink.tpl_app_secure, line 95
+			} else if (protocol == "aes") { // library marker tpLink.tpl_app_secure, line 96
+				aesHandshake(baseUrl, devData) // library marker tpLink.tpl_app_secure, line 97
+			} else { // library marker tpLink.tpl_app_secure, line 98
+				atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 99
+				logData << [status: "unsupportedProtocol: ${devData.protocol}"] // library marker tpLink.tpl_app_secure, line 100
+				logInfo(logData) // library marker tpLink.tpl_app_secure, line 101
+			} // library marker tpLink.tpl_app_secure, line 102
+		} // library marker tpLink.tpl_app_secure, line 103
+	} else { // library marker tpLink.tpl_app_secure, line 104
+		atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 105
+		Map logData = [method: "getSecureDiscData", status: "errorInParseUDP", discData: discData] // library marker tpLink.tpl_app_secure, line 106
+		logDebug(logData) // library marker tpLink.tpl_app_secure, line 107
+	} // library marker tpLink.tpl_app_secure, line 108
+} // library marker tpLink.tpl_app_secure, line 109
 
-			if (comps.find { it.id == "color_temperature" } ) { // library marker tpLink.tpl_app_secure, line 149
-				def ctHigh = 6500 // library marker tpLink.tpl_app_secure, line 150
-				def ctLow = 2700 // library marker tpLink.tpl_app_secure, line 151
-				if (cmdResp.color_temp_range) { // library marker tpLink.tpl_app_secure, line 152
-					ctHigh = cmdResp.color_temp_range[1] // library marker tpLink.tpl_app_secure, line 153
-					ctLow = cmdResp.color_temp_range[0] // library marker tpLink.tpl_app_secure, line 154
-				} // library marker tpLink.tpl_app_secure, line 155
-				device << [ctHigh: ctHigh, ctLow: ctLow] // library marker tpLink.tpl_app_secure, line 156
-			} // library marker tpLink.tpl_app_secure, line 157
-		} // library marker tpLink.tpl_app_secure, line 158
-		device << [type: type] // library marker tpLink.tpl_app_secure, line 159
-		if (comps.find {it.id == "led"}) { device << [hasLed: "true"] } // library marker tpLink.tpl_app_secure, line 160
-		if (type != "Parent") { // library marker tpLink.tpl_app_secure, line 161
-			if (comps.find {it.id == "energy_monitoring"}) { device << [isEm: "true"] } // library marker tpLink.tpl_app_secure, line 162
-			if (comps.find {it.id == "on_off_gradually"}) { device << [gradOnOff: "true"] } // library marker tpLink.tpl_app_secure, line 163
+void getSmartDeviceData(devData, cmdData) { // library marker tpLink.tpl_app_secure, line 111
+	Map logData = [method: "getSmartDeviceData"] // library marker tpLink.tpl_app_secure, line 112
+	Map device = [api: "smart", protocol: devData.protocol, baseUrl: """${devData.baseUrl}""", // library marker tpLink.tpl_app_secure, line 113
+				  model: devData.model] // library marker tpLink.tpl_app_secure, line 114
+	Map componentResponse = cmdData?.find { it.method == "component_nego" } // library marker tpLink.tpl_app_secure, line 115
+	Map deviceInfoResponse = cmdData?.find { it.method == "get_device_info" } // library marker tpLink.tpl_app_secure, line 116
+	List comps = componentResponse?.result?.component_list ?: [] // library marker tpLink.tpl_app_secure, line 117
+	Map cmdResp = deviceInfoResponse?.result // library marker tpLink.tpl_app_secure, line 118
+	if (!cmdResp) { // library marker tpLink.tpl_app_secure, line 119
+		atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 120
+		logDebug("getSmartDeviceData: [status: missingDeviceInfo]") // library marker tpLink.tpl_app_secure, line 121
+		return // library marker tpLink.tpl_app_secure, line 122
+	} // library marker tpLink.tpl_app_secure, line 123
+
+	def dni = devData.dni // library marker tpLink.tpl_app_secure, line 125
+	byte[] aliasBytes = cmdResp.nickname.decodeBase64() // library marker tpLink.tpl_app_secure, line 126
+	String alias = new String(aliasBytes) // library marker tpLink.tpl_app_secure, line 127
+	if (!(instMatter ?: false) && comps.find {it.id == "matter"}) { // library marker tpLink.tpl_app_secure, line 128
+		logData << ["${alias}": device, status: "Not added. Matter Install Not Selected"] // library marker tpLink.tpl_app_secure, line 129
+		atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 130
+	} else { // library marker tpLink.tpl_app_secure, line 131
+		def tpType = devData.type // library marker tpLink.tpl_app_secure, line 132
+		if (alias == "") { alias = devData.model } // library marker tpLink.tpl_app_secure, line 133
+		String manufacturer = "tapo" // library marker tpLink.tpl_app_secure, line 134
+		if (tpType.contains("KASA")) { manufacturer = "kasa" } // library marker tpLink.tpl_app_secure, line 135
+		device << [alias: alias, manufacturer: manufacturer, deviceId: cmdResp.device_id] // library marker tpLink.tpl_app_secure, line 136
+		def type = "unknown" // library marker tpLink.tpl_app_secure, line 137
+		if (tpType.contains("PLUG") || tpType.contains("SWITCH")) { // library marker tpLink.tpl_app_secure, line 138
+			type = "Plug Switch" // library marker tpLink.tpl_app_secure, line 139
+			if (comps.find { it.id == "control_child" }) { // library marker tpLink.tpl_app_secure, line 140
+				type = "Parent" // library marker tpLink.tpl_app_secure, line 141
+			} else if (comps.find{it.id=="dimmer"} || comps.find{it.id=="brightness"}) { // library marker tpLink.tpl_app_secure, line 142
+				type = "Dimming Switch" // library marker tpLink.tpl_app_secure, line 143
+			} // library marker tpLink.tpl_app_secure, line 144
+		} else if (tpType.contains("BULB")) { // library marker tpLink.tpl_app_secure, line 145
+			type = "Mono Bulb" // library marker tpLink.tpl_app_secure, line 146
+			if (comps.find { it.id == "light_strip" }) { // library marker tpLink.tpl_app_secure, line 147
+				type = "Light Strip" // library marker tpLink.tpl_app_secure, line 148
+			} else if (comps.find { it.id == "color" }) { // library marker tpLink.tpl_app_secure, line 149
+				type = "Color Bulb" // library marker tpLink.tpl_app_secure, line 150
+			} else if (comps.find { it.id == "color_temperature" } ) { // library marker tpLink.tpl_app_secure, line 151
+				type = "CT Bulb" // library marker tpLink.tpl_app_secure, line 152
+			} // library marker tpLink.tpl_app_secure, line 153
+
+			if (comps.find { it.id == "color_temperature" } ) { // library marker tpLink.tpl_app_secure, line 155
+				def ctHigh = 6500 // library marker tpLink.tpl_app_secure, line 156
+				def ctLow = 2700 // library marker tpLink.tpl_app_secure, line 157
+				if (cmdResp.color_temp_range) { // library marker tpLink.tpl_app_secure, line 158
+					ctHigh = cmdResp.color_temp_range[1] // library marker tpLink.tpl_app_secure, line 159
+					ctLow = cmdResp.color_temp_range[0] // library marker tpLink.tpl_app_secure, line 160
+				} // library marker tpLink.tpl_app_secure, line 161
+				device << [ctHigh: ctHigh, ctLow: ctLow] // library marker tpLink.tpl_app_secure, line 162
+			} // library marker tpLink.tpl_app_secure, line 163
 		} // library marker tpLink.tpl_app_secure, line 164
-		addDeviceData(dni, device) // library marker tpLink.tpl_app_secure, line 165
-	} // library marker tpLink.tpl_app_secure, line 166
-	logDebug(logData) // library marker tpLink.tpl_app_secure, line 167
-} // library marker tpLink.tpl_app_secure, line 168
+		device << [type: type] // library marker tpLink.tpl_app_secure, line 165
+		if (comps.find {it.id == "led"}) { device << [hasLed: "true"] } // library marker tpLink.tpl_app_secure, line 166
+		if (type != "Parent") { // library marker tpLink.tpl_app_secure, line 167
+			if (comps.find {it.id == "energy_monitoring"}) { device << [isEm: "true"] } // library marker tpLink.tpl_app_secure, line 168
+			if (comps.find {it.id == "on_off_gradually"}) { device << [gradOnOff: "true"] } // library marker tpLink.tpl_app_secure, line 169
+		} // library marker tpLink.tpl_app_secure, line 170
+		addDeviceData(dni, device) // library marker tpLink.tpl_app_secure, line 171
+	} // library marker tpLink.tpl_app_secure, line 172
+	logDebug(logData) // library marker tpLink.tpl_app_secure, line 173
+} // library marker tpLink.tpl_app_secure, line 174
 
-void quickFindSecureData(response) { // library marker tpLink.tpl_app_secure, line 170
-	unschedule("udpTimeout") // library marker tpLink.tpl_app_secure, line 171
-	atomicState.findingSecure = false // library marker tpLink.tpl_app_secure, line 172
-	Map logData = [method: "quickFindSecureData"] // library marker tpLink.tpl_app_secure, line 173
-	if (response == "udpTimeout") { // library marker tpLink.tpl_app_secure, line 174
-		logData << [response: "udpTimeout", status: "No devices found"] // library marker tpLink.tpl_app_secure, line 175
-	} else { // library marker tpLink.tpl_app_secure, line 176
-		def foundDevs = 0 // library marker tpLink.tpl_app_secure, line 177
-		if (response instanceof Map) { // library marker tpLink.tpl_app_secure, line 178
-			foundDevs += 1 // library marker tpLink.tpl_app_secure, line 179
-			def respData = parseUdp(response, "smart") // library marker tpLink.tpl_app_secure, line 180
-			updateSecureChild(respData) // library marker tpLink.tpl_app_secure, line 181
-		} else { // library marker tpLink.tpl_app_secure, line 182
-			response.each { // library marker tpLink.tpl_app_secure, line 183
-				foundDevs +=1 // library marker tpLink.tpl_app_secure, line 184
-				def respData = parseUdp(it, "smart") // library marker tpLink.tpl_app_secure, line 185
-				updateSecureChild(respData) // library marker tpLink.tpl_app_secure, line 186
-			} // library marker tpLink.tpl_app_secure, line 187
-		} // library marker tpLink.tpl_app_secure, line 188
-		logData << [devicesFound: foundDevs, status: "allSentToParse"] // library marker tpLink.tpl_app_secure, line 189
-	} // library marker tpLink.tpl_app_secure, line 190
-	logInfo(logData) // library marker tpLink.tpl_app_secure, line 191
-} // library marker tpLink.tpl_app_secure, line 192
+void quickFindSecureData(response) { // library marker tpLink.tpl_app_secure, line 176
+	unschedule("udpTimeout") // library marker tpLink.tpl_app_secure, line 177
+	atomicState.findingSecure = false // library marker tpLink.tpl_app_secure, line 178
+	Map logData = [method: "quickFindSecureData"] // library marker tpLink.tpl_app_secure, line 179
+	if (response == "udpTimeout") { // library marker tpLink.tpl_app_secure, line 180
+		logData << [response: "udpTimeout", status: "No devices found"] // library marker tpLink.tpl_app_secure, line 181
+	} else { // library marker tpLink.tpl_app_secure, line 182
+		def foundDevs = 0 // library marker tpLink.tpl_app_secure, line 183
+		if (response instanceof Map) { // library marker tpLink.tpl_app_secure, line 184
+			foundDevs += 1 // library marker tpLink.tpl_app_secure, line 185
+			def respData = parseUdp(response, "smart") // library marker tpLink.tpl_app_secure, line 186
+			updateSecureChild(respData) // library marker tpLink.tpl_app_secure, line 187
+		} else { // library marker tpLink.tpl_app_secure, line 188
+			response.each { // library marker tpLink.tpl_app_secure, line 189
+				foundDevs +=1 // library marker tpLink.tpl_app_secure, line 190
+				def respData = parseUdp(it, "smart") // library marker tpLink.tpl_app_secure, line 191
+				updateSecureChild(respData) // library marker tpLink.tpl_app_secure, line 192
+			} // library marker tpLink.tpl_app_secure, line 193
+		} // library marker tpLink.tpl_app_secure, line 194
+		logData << [devicesFound: foundDevs, status: "allSentToParse"] // library marker tpLink.tpl_app_secure, line 195
+	} // library marker tpLink.tpl_app_secure, line 196
+	logInfo(logData) // library marker tpLink.tpl_app_secure, line 197
+} // library marker tpLink.tpl_app_secure, line 198
 
-void updateSecureChild(respData) { // library marker tpLink.tpl_app_secure, line 194
-	if (respData.status == "ok") { // library marker tpLink.tpl_app_secure, line 195
-		if (respData.status != "ok") { // library marker tpLink.tpl_app_secure, line 196
-			logDebug("updateSecureChild: [error: not LAN_TYPE_UDPCLIENT]") // library marker tpLink.tpl_app_secure, line 197
-			return  // library marker tpLink.tpl_app_secure, line 198
-		}  // library marker tpLink.tpl_app_secure, line 199
-		Map payload = respData?.cmdResp?.result  // library marker tpLink.tpl_app_secure, line 200
-		Map encryptScheme = payload?.mgt_encrypt_schm  // library marker tpLink.tpl_app_secure, line 201
-		if (!payload?.mac || !encryptScheme?.encrypt_type  // library marker tpLink.tpl_app_secure, line 202
-			|| !encryptScheme?.http_port) {  // library marker tpLink.tpl_app_secure, line 203
-			logDebug("updateSecureChild: [status: invalidDiscoveryPayload]") // library marker tpLink.tpl_app_secure, line 204
-			return // library marker tpLink.tpl_app_secure, line 205
-		}  // library marker tpLink.tpl_app_secure, line 206
-		String protocol = encryptScheme.encrypt_type.toLowerCase()  // library marker tpLink.tpl_app_secure, line 207
-		if (protocol == "tpap") { protocol = "klap" } // library marker tpLink.tpl_app_secure, line 208
-		String httpPort = payload.mgt_encrypt_schm.http_port // library marker tpLink.tpl_app_secure, line 209
-		String httpStr = "http://" // library marker tpLink.tpl_app_secure, line 210
-		String httpPath = "/app" // library marker tpLink.tpl_app_secure, line 211
-		if (payload.mgt_encrypt_schm.is_support_https) { httpStr = "https://" } // library marker tpLink.tpl_app_secure, line 212
-		String baseUrl = httpStr + respData.ip + ":" + httpPort + httpPath // library marker tpLink.tpl_app_secure, line 213
-		Map deviceData = [protocol: protocol, baseUrl: baseUrl] // library marker tpLink.tpl_app_secure, line 214
-		String dni = payload.mac.replaceAll("-", "") // library marker tpLink.tpl_app_secure, line 215
-		def child = getChildDevice(dni) // library marker tpLink.tpl_app_secure, line 216
-		if (child) { child.updateDeviceData(deviceData) } // library marker tpLink.tpl_app_secure, line 217
-	} else { // library marker tpLink.tpl_app_secure, line 218
-		logDebug("updateSecureChild: [error: not LAN_TYPE_UDPCLIENT]") // library marker tpLink.tpl_app_secure, line 219
-	} // library marker tpLink.tpl_app_secure, line 220
-} // library marker tpLink.tpl_app_secure, line 221
+void updateSecureChild(respData) { // library marker tpLink.tpl_app_secure, line 200
+	if (respData.status == "ok") { // library marker tpLink.tpl_app_secure, line 201
+		if (respData.status != "ok") { // library marker tpLink.tpl_app_secure, line 202
+			logDebug("updateSecureChild: [error: not LAN_TYPE_UDPCLIENT]") // library marker tpLink.tpl_app_secure, line 203
+			return  // library marker tpLink.tpl_app_secure, line 204
+		}  // library marker tpLink.tpl_app_secure, line 205
+		Map payload = respData?.cmdResp?.result  // library marker tpLink.tpl_app_secure, line 206
+		Map encryptScheme = payload?.mgt_encrypt_schm  // library marker tpLink.tpl_app_secure, line 207
+		if (!payload?.mac || !encryptScheme?.encrypt_type  // library marker tpLink.tpl_app_secure, line 208
+			|| !encryptScheme?.http_port) {  // library marker tpLink.tpl_app_secure, line 209
+			logDebug("updateSecureChild: [status: invalidDiscoveryPayload]") // library marker tpLink.tpl_app_secure, line 210
+			return // library marker tpLink.tpl_app_secure, line 211
+		}  // library marker tpLink.tpl_app_secure, line 212
+		String protocol = encryptScheme.encrypt_type.toLowerCase()  // library marker tpLink.tpl_app_secure, line 213
+		if (protocol == "tpap") { protocol = "klap" } // library marker tpLink.tpl_app_secure, line 214
+		String httpPort = payload.mgt_encrypt_schm.http_port // library marker tpLink.tpl_app_secure, line 215
+		String httpStr = "http://" // library marker tpLink.tpl_app_secure, line 216
+		String httpPath = "/app" // library marker tpLink.tpl_app_secure, line 217
+		if (payload.mgt_encrypt_schm.is_support_https) { httpStr = "https://" } // library marker tpLink.tpl_app_secure, line 218
+		String baseUrl = httpStr + respData.ip + ":" + httpPort + httpPath // library marker tpLink.tpl_app_secure, line 219
+		Map deviceData = [protocol: protocol, baseUrl: baseUrl] // library marker tpLink.tpl_app_secure, line 220
+		String dni = payload.mac.replaceAll("-", "") // library marker tpLink.tpl_app_secure, line 221
+		def child = getChildDevice(dni) // library marker tpLink.tpl_app_secure, line 222
+		if (child) { child.updateDeviceData(deviceData) } // library marker tpLink.tpl_app_secure, line 223
+	} else { // library marker tpLink.tpl_app_secure, line 224
+		logDebug("updateSecureChild: [error: not LAN_TYPE_UDPCLIENT]") // library marker tpLink.tpl_app_secure, line 225
+	} // library marker tpLink.tpl_app_secure, line 226
+} // library marker tpLink.tpl_app_secure, line 227
 
-Map getDataCmd(api) { // library marker tpLink.tpl_app_secure, line 223
-	Map cmdBody = [:] // library marker tpLink.tpl_app_secure, line 224
-	if (api == "iot") { // library marker tpLink.tpl_app_secure, line 225
-		cmdBody = [system: [get_sysinfo:[]]] // library marker tpLink.tpl_app_secure, line 226
-	} else { // library marker tpLink.tpl_app_secure, line 227
-		List requests = [[method: "get_device_info"], [method: "component_nego"]] // library marker tpLink.tpl_app_secure, line 228
-		cmdBody = [method: "multipleRequest", params: [requests: requests]] // library marker tpLink.tpl_app_secure, line 229
-	} // library marker tpLink.tpl_app_secure, line 230
-	return cmdBody // library marker tpLink.tpl_app_secure, line 231
-} // library marker tpLink.tpl_app_secure, line 232
+Map getDataCmd(api) { // library marker tpLink.tpl_app_secure, line 229
+	Map cmdBody = [:] // library marker tpLink.tpl_app_secure, line 230
+	if (api == "iot") { // library marker tpLink.tpl_app_secure, line 231
+		cmdBody = [system: [get_sysinfo:[]]] // library marker tpLink.tpl_app_secure, line 232
+	} else { // library marker tpLink.tpl_app_secure, line 233
+		List requests = [[method: "get_device_info"], [method: "component_nego"]] // library marker tpLink.tpl_app_secure, line 234
+		cmdBody = [method: "multipleRequest", params: [requests: requests]] // library marker tpLink.tpl_app_secure, line 235
+	} // library marker tpLink.tpl_app_secure, line 236
+	return cmdBody // library marker tpLink.tpl_app_secure, line 237
+} // library marker tpLink.tpl_app_secure, line 238
 
-//	===== get KLAP Protocol Data ===== // library marker tpLink.tpl_app_secure, line 234
-void sendKlapDataCmd(devData) { // library marker tpLink.tpl_app_secure, line 235
-	Map reqParams = [timeout: 10, headers: ["Cookie": devData.cookie]] // library marker tpLink.tpl_app_secure, line 236
-	def seqNo = devData.seqNo + 1 // library marker tpLink.tpl_app_secure, line 237
-	String cmdBodyJson = new groovy.json.JsonBuilder(getDataCmd(devData.api)).toString() // library marker tpLink.tpl_app_secure, line 238
-	Map encryptedData = klapEncrypt(cmdBodyJson.getBytes(), devData.encKey, // library marker tpLink.tpl_app_secure, line 239
-									devData.encIv, devData.encSig, seqNo) // library marker tpLink.tpl_app_secure, line 240
-	reqParams << [ // library marker tpLink.tpl_app_secure, line 241
-		uri: "${devData.baseUrl}/request?seq=${encryptedData.seqNumber}", // library marker tpLink.tpl_app_secure, line 242
-		body: encryptedData.cipherData, // library marker tpLink.tpl_app_secure, line 243
-		timeout:10, // library marker tpLink.tpl_app_secure, line 244
-		contentType: "application/octet-stream", // library marker tpLink.tpl_app_secure, line 245
-		requestContentType: "application/octet-stream"] // library marker tpLink.tpl_app_secure, line 246
-	asynchttpPost("parseKlapResp", reqParams, devData) // library marker tpLink.tpl_app_secure, line 247
-} // library marker tpLink.tpl_app_secure, line 248
+//	===== get KLAP Protocol Data ===== // library marker tpLink.tpl_app_secure, line 240
+void sendKlapDataCmd(devData) { // library marker tpLink.tpl_app_secure, line 241
+	Map reqParams = [timeout: 10, headers: ["Cookie": devData.cookie]] // library marker tpLink.tpl_app_secure, line 242
+	def seqNo = devData.seqNo + 1 // library marker tpLink.tpl_app_secure, line 243
+	String cmdBodyJson = new groovy.json.JsonBuilder(getDataCmd(devData.api)).toString() // library marker tpLink.tpl_app_secure, line 244
+	Map encryptedData = klapEncrypt(cmdBodyJson.getBytes(), devData.encKey, // library marker tpLink.tpl_app_secure, line 245
+									devData.encIv, devData.encSig, seqNo) // library marker tpLink.tpl_app_secure, line 246
+	reqParams << [ // library marker tpLink.tpl_app_secure, line 247
+		uri: "${devData.baseUrl}/request?seq=${encryptedData.seqNumber}", // library marker tpLink.tpl_app_secure, line 248
+		body: encryptedData.cipherData, // library marker tpLink.tpl_app_secure, line 249
+		timeout:10, // library marker tpLink.tpl_app_secure, line 250
+		contentType: "application/octet-stream", // library marker tpLink.tpl_app_secure, line 251
+		requestContentType: "application/octet-stream"] // library marker tpLink.tpl_app_secure, line 252
+	asynchttpPost("parseKlapResp", reqParams, devData) // library marker tpLink.tpl_app_secure, line 253
+} // library marker tpLink.tpl_app_secure, line 254
 
-void parseKlapResp(resp, devData) { // library marker tpLink.tpl_app_secure, line 250
-	Map logData = [method: "parseKlapResp", ip: devData.baseUrl, model: devData.model] // library marker tpLink.tpl_app_secure, line 251
-	if (resp.status == 200) { // library marker tpLink.tpl_app_secure, line 252
-		Map cmdResp = [:] // library marker tpLink.tpl_app_secure, line 253
-		try { // library marker tpLink.tpl_app_secure, line 254
-			byte[] cipherResponse = resp.data.decodeBase64()[32..-1] // library marker tpLink.tpl_app_secure, line 255
-			def clearResp = klapDecrypt(cipherResponse,devData.encKey, // library marker tpLink.tpl_app_secure, line 256
-									devData.encIv, devData.seqNo + 1) // library marker tpLink.tpl_app_secure, line 257
-			cmdResp =  new JsonSlurper().parseText(clearResp) // library marker tpLink.tpl_app_secure, line 258
-			logData << [status: "OK"] // library marker tpLink.tpl_app_secure, line 259
-		} catch (err) { // library marker tpLink.tpl_app_secure, line 260
-			atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 261
-			logData << [error: err, errTxt: "error decyphering response"] // library marker tpLink.tpl_app_secure, line 262
-			logDebug(logData) // library marker tpLink.tpl_app_secure, line 263
-			return // library marker tpLink.tpl_app_secure, line 264
-		} // library marker tpLink.tpl_app_secure, line 265
-		if (cmdResp?.error_code == 0 && cmdResp?.result?.responses) { // library marker tpLink.tpl_app_secure, line 266
-			getSmartDeviceData(devData, cmdResp.result.responses) // library marker tpLink.tpl_app_secure, line 267
-		} else if (cmdResp?.system?.get_sysinfo?.err_code == 0) { // library marker tpLink.tpl_app_secure, line 268
-			getIotDeviceData(cmdResp, devData.baseUrl, devData.protocol) // library marker tpLink.tpl_app_secure, line 269
-		} else { // library marker tpLink.tpl_app_secure, line 270
-			atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 271
-			logData << [status: "errorInCmdResp", cmdResp: cmdResp] // library marker tpLink.tpl_app_secure, line 272
-			logDebug(logData) // library marker tpLink.tpl_app_secure, line 273
-		}		 // library marker tpLink.tpl_app_secure, line 274
-	} else { // library marker tpLink.tpl_app_secure, line 275
-		atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 276
-		logData << [status: "httpFailure", data: resp.properties] // library marker tpLink.tpl_app_secure, line 277
-		logDebug(logData) // library marker tpLink.tpl_app_secure, line 278
-	} // library marker tpLink.tpl_app_secure, line 279
-} // library marker tpLink.tpl_app_secure, line 280
+void parseKlapResp(resp, devData) { // library marker tpLink.tpl_app_secure, line 256
+	Map logData = [method: "parseKlapResp", ip: devData.baseUrl, model: devData.model] // library marker tpLink.tpl_app_secure, line 257
+	if (resp.status == 200) { // library marker tpLink.tpl_app_secure, line 258
+		Map cmdResp = [:] // library marker tpLink.tpl_app_secure, line 259
+		try { // library marker tpLink.tpl_app_secure, line 260
+			byte[] cipherResponse = resp.data.decodeBase64()[32..-1] // library marker tpLink.tpl_app_secure, line 261
+			def clearResp = klapDecrypt(cipherResponse,devData.encKey, // library marker tpLink.tpl_app_secure, line 262
+									devData.encIv, devData.seqNo + 1) // library marker tpLink.tpl_app_secure, line 263
+			cmdResp =  new JsonSlurper().parseText(clearResp) // library marker tpLink.tpl_app_secure, line 264
+			logData << [status: "OK"] // library marker tpLink.tpl_app_secure, line 265
+		} catch (err) { // library marker tpLink.tpl_app_secure, line 266
+			atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 267
+			logData << [error: err, errTxt: "error decyphering response"] // library marker tpLink.tpl_app_secure, line 268
+			logDebug(logData) // library marker tpLink.tpl_app_secure, line 269
+			return // library marker tpLink.tpl_app_secure, line 270
+		} // library marker tpLink.tpl_app_secure, line 271
+		if (cmdResp?.error_code == 0 && cmdResp?.result?.responses) { // library marker tpLink.tpl_app_secure, line 272
+			getSmartDeviceData(devData, cmdResp.result.responses) // library marker tpLink.tpl_app_secure, line 273
+		} else if (cmdResp?.system?.get_sysinfo?.err_code == 0) { // library marker tpLink.tpl_app_secure, line 274
+			getIotDeviceData(cmdResp, devData.baseUrl, devData.protocol) // library marker tpLink.tpl_app_secure, line 275
+		} else { // library marker tpLink.tpl_app_secure, line 276
+			atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 277
+			logData << [status: "errorInCmdResp", cmdResp: cmdResp] // library marker tpLink.tpl_app_secure, line 278
+			logDebug(logData) // library marker tpLink.tpl_app_secure, line 279
+		}		 // library marker tpLink.tpl_app_secure, line 280
+	} else { // library marker tpLink.tpl_app_secure, line 281
+		atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 282
+		logData << [status: "httpFailure", data: resp.properties] // library marker tpLink.tpl_app_secure, line 283
+		logDebug(logData) // library marker tpLink.tpl_app_secure, line 284
+	} // library marker tpLink.tpl_app_secure, line 285
+} // library marker tpLink.tpl_app_secure, line 286
 
-//	===== get Smart AES Protocol Data ===== // library marker tpLink.tpl_app_secure, line 282
-void sendAesDataCmd(Map devData) { // library marker tpLink.tpl_app_secure, line 283
-	String cmd = new JsonBuilder(getDataCmd(devData.api)).toString() // library marker tpLink.tpl_app_secure, line 284
-	String uri = "${devData.baseUrl}?token=${devData.token}" // library marker tpLink.tpl_app_secure, line 285
-	Map reqParams = getAesParams(cmd, devData.encKey, devData.encIv, // library marker tpLink.tpl_app_secure, line 286
-								 uri, devData.cookie) // library marker tpLink.tpl_app_secure, line 287
-	devData.retry = false // library marker tpLink.tpl_app_secure, line 288
-	asynchttpPost("parseAesResp", reqParams, devData) // library marker tpLink.tpl_app_secure, line 289
-} // library marker tpLink.tpl_app_secure, line 290
+//	===== get Smart AES Protocol Data ===== // library marker tpLink.tpl_app_secure, line 288
+void sendAesDataCmd(Map devData) { // library marker tpLink.tpl_app_secure, line 289
+	String cmd = new JsonBuilder(getDataCmd(devData.api)).toString() // library marker tpLink.tpl_app_secure, line 290
+	String uri = "${devData.baseUrl}?token=${devData.token}" // library marker tpLink.tpl_app_secure, line 291
+	Map reqParams = getAesParams(cmd, devData.encKey, devData.encIv, // library marker tpLink.tpl_app_secure, line 292
+								 uri, devData.cookie) // library marker tpLink.tpl_app_secure, line 293
+	devData.retry = false // library marker tpLink.tpl_app_secure, line 294
+	asynchttpPost("parseAesResp", reqParams, devData) // library marker tpLink.tpl_app_secure, line 295
+} // library marker tpLink.tpl_app_secure, line 296
 
-void parseAesResp(resp, devData) { // library marker tpLink.tpl_app_secure, line 292
-	Map logData = [method: "parseAesResp", api: devData.api, model: devData.model] // library marker tpLink.tpl_app_secure, line 293
-	if (resp.status != 200 || !resp?.json?.result?.response) { // library marker tpLink.tpl_app_secure, line 294
-		atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 295
-		logData << [status: "httpFailure", data: resp.properties] // library marker tpLink.tpl_app_secure, line 296
-		logDebug(logData) // library marker tpLink.tpl_app_secure, line 297
-		return // library marker tpLink.tpl_app_secure, line 298
-	} // library marker tpLink.tpl_app_secure, line 299
-	try { // library marker tpLink.tpl_app_secure, line 300
-		Map cmdResp = new JsonSlurper().parseText(aesDecrypt( // library marker tpLink.tpl_app_secure, line 301
-			resp.json.result.response, devData.encKey, devData.encIv)) // library marker tpLink.tpl_app_secure, line 302
-		logData << [status: "OK"] // library marker tpLink.tpl_app_secure, line 303
-		if (devData.api == "smart" && cmdResp?.error_code == 0 && // library marker tpLink.tpl_app_secure, line 304
-			cmdResp?.result?.responses) { // library marker tpLink.tpl_app_secure, line 305
-			getSmartDeviceData(devData, cmdResp.result.responses) // library marker tpLink.tpl_app_secure, line 306
-		} else if (devData.api == "iot" && // library marker tpLink.tpl_app_secure, line 307
-				   cmdResp?.system?.get_sysinfo?.err_code == 0) { // library marker tpLink.tpl_app_secure, line 308
-			getIotDeviceData(cmdResp, devData.baseUrl, devData.protocol) // library marker tpLink.tpl_app_secure, line 309
-		} else { // library marker tpLink.tpl_app_secure, line 310
-			atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 311
-			logData << [ status: "errorInCmdResp", cmdResp: cmdResp] // library marker tpLink.tpl_app_secure, line 312
-            logDebug(logData) // library marker tpLink.tpl_app_secure, line 313
-		} // library marker tpLink.tpl_app_secure, line 314
-	} catch (err) { // library marker tpLink.tpl_app_secure, line 315
-		atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 316
-		logData << [status: "deviceDataParseError", error: err] // library marker tpLink.tpl_app_secure, line 317
-		logDebug(logData) // library marker tpLink.tpl_app_secure, line 318
-	} // library marker tpLink.tpl_app_secure, line 319
-} // library marker tpLink.tpl_app_secure, line 320
+void parseAesResp(resp, devData) { // library marker tpLink.tpl_app_secure, line 298
+	Map logData = [method: "parseAesResp", api: devData.api, model: devData.model] // library marker tpLink.tpl_app_secure, line 299
+	if (resp.status != 200 || !resp?.json?.result?.response) { // library marker tpLink.tpl_app_secure, line 300
+		atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 301
+		logData << [status: "httpFailure", data: resp.properties] // library marker tpLink.tpl_app_secure, line 302
+		logDebug(logData) // library marker tpLink.tpl_app_secure, line 303
+		return // library marker tpLink.tpl_app_secure, line 304
+	} // library marker tpLink.tpl_app_secure, line 305
+	try { // library marker tpLink.tpl_app_secure, line 306
+		Map cmdResp = new JsonSlurper().parseText(aesDecrypt( // library marker tpLink.tpl_app_secure, line 307
+			resp.json.result.response, devData.encKey, devData.encIv)) // library marker tpLink.tpl_app_secure, line 308
+		logData << [status: "OK"] // library marker tpLink.tpl_app_secure, line 309
+		if (devData.api == "smart" && cmdResp?.error_code == 0 && // library marker tpLink.tpl_app_secure, line 310
+			cmdResp?.result?.responses) { // library marker tpLink.tpl_app_secure, line 311
+			getSmartDeviceData(devData, cmdResp.result.responses) // library marker tpLink.tpl_app_secure, line 312
+		} else if (devData.api == "iot" && // library marker tpLink.tpl_app_secure, line 313
+				   cmdResp?.system?.get_sysinfo?.err_code == 0) { // library marker tpLink.tpl_app_secure, line 314
+			getIotDeviceData(cmdResp, devData.baseUrl, devData.protocol) // library marker tpLink.tpl_app_secure, line 315
+		} else { // library marker tpLink.tpl_app_secure, line 316
+			atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 317
+			logData << [ status: "errorInCmdResp", cmdResp: cmdResp] // library marker tpLink.tpl_app_secure, line 318
+            logDebug(logData) // library marker tpLink.tpl_app_secure, line 319
+		} // library marker tpLink.tpl_app_secure, line 320
+	} catch (err) { // library marker tpLink.tpl_app_secure, line 321
+		atomicState.deviceWait = false // library marker tpLink.tpl_app_secure, line 322
+		logData << [status: "deviceDataParseError", error: err] // library marker tpLink.tpl_app_secure, line 323
+		logDebug(logData) // library marker tpLink.tpl_app_secure, line 324
+	} // library marker tpLink.tpl_app_secure, line 325
+} // library marker tpLink.tpl_app_secure, line 326
 
 // ~~~~~ end include (1069) tpLink.tpl_app_secure ~~~~~
 
