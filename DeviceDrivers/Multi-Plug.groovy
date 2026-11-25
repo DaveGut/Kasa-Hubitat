@@ -26,7 +26,7 @@ metadata {
 		commonPrefs()
 	} 
 }
-
+ 
 def installed() {
 	Map instStatus = [method: "installed"]
 	instStatus << commonInstalled()
@@ -885,132 +885,133 @@ def smartRefresh() { // library marker tpLink.tpl_api_smart, line 11
 } // library marker tpLink.tpl_api_smart, line 19
 
 def smartPoll() { // library marker tpLink.tpl_api_smart, line 21
-	state.eventType = "manual" // library marker tpLink.tpl_api_smart, line 22
-	List requests = [[method: "get_device_info"]] // library marker tpLink.tpl_api_smart, line 23
-	if (emEnable) {  // library marker tpLink.tpl_api_smart, line 24
-		requests << [method: "get_current_power"] // library marker tpLink.tpl_api_smart, line 25
-	} // library marker tpLink.tpl_api_smart, line 26
-	Map cmdBody = [method: "multipleRequest", params: [requests: requests]] // library marker tpLink.tpl_api_smart, line 27
-	sendSmartCmd(cmdBody, true) // library marker tpLink.tpl_api_smart, line 28
-} // library marker tpLink.tpl_api_smart, line 29
+//	state.eventType = "manual" // library marker tpLink.tpl_api_smart, line 22
+	state.eventType = "physical" // library marker tpLink.tpl_api_smart, line 23
+	List requests = [[method: "get_device_info"]] // library marker tpLink.tpl_api_smart, line 24
+	if (emEnable) {  // library marker tpLink.tpl_api_smart, line 25
+		requests << [method: "get_current_power"] // library marker tpLink.tpl_api_smart, line 26
+	} // library marker tpLink.tpl_api_smart, line 27
+	Map cmdBody = [method: "multipleRequest", params: [requests: requests]] // library marker tpLink.tpl_api_smart, line 28
+	sendSmartCmd(cmdBody, true) // library marker tpLink.tpl_api_smart, line 29
+} // library marker tpLink.tpl_api_smart, line 30
 
-//	setColor is used in CT, Color bulbs and light strip. // library marker tpLink.tpl_api_smart, line 31
-def setSmartColor(params) { // library marker tpLink.tpl_api_smart, line 32
-	List requests = [[method: "set_device_info", params: params], // library marker tpLink.tpl_api_smart, line 33
-					 [method: "get_device_info"]] // library marker tpLink.tpl_api_smart, line 34
-	Map cmdBody = [method: "multipleRequest", params: [requests: requests]] // library marker tpLink.tpl_api_smart, line 35
-	sendSmartCmd(cmdBody, true) // library marker tpLink.tpl_api_smart, line 36
-	if (emEnable) { runIn(5, getSmartPower) } // library marker tpLink.tpl_api_smart, line 37
-} // library marker tpLink.tpl_api_smart, line 38
+//	setColor is used in CT, Color bulbs and light strip. // library marker tpLink.tpl_api_smart, line 32
+def setSmartColor(params) { // library marker tpLink.tpl_api_smart, line 33
+	List requests = [[method: "set_device_info", params: params], // library marker tpLink.tpl_api_smart, line 34
+					 [method: "get_device_info"]] // library marker tpLink.tpl_api_smart, line 35
+	Map cmdBody = [method: "multipleRequest", params: [requests: requests]] // library marker tpLink.tpl_api_smart, line 36
+	sendSmartCmd(cmdBody, true) // library marker tpLink.tpl_api_smart, line 37
+	if (emEnable) { runIn(5, getSmartPower) } // library marker tpLink.tpl_api_smart, line 38
+} // library marker tpLink.tpl_api_smart, line 39
 
-//	===== Smart Implementation Interface ===== // library marker tpLink.tpl_api_smart, line 40
-def sendSmartCmd(cmdBody, retry = false, parseMeth = "parseSmartResp", dni = null) { // library marker tpLink.tpl_api_smart, line 41
-//	Insturmentation point for testing	 // library marker tpLink.tpl_api_smart, line 42
-//log.info "cmdBody: $cmdBody" // library marker tpLink.tpl_api_smart, line 43
-	if (retry == true) { // library marker tpLink.tpl_api_smart, line 44
-		Map cmdData = [cmdBody: cmdBody, action: parseMeth, retryMeth: "sendSmartCmd"] // library marker tpLink.tpl_api_smart, line 45
-		state.cmdData = cmdData // library marker tpLink.tpl_api_smart, line 46
-	} // library marker tpLink.tpl_api_smart, line 47
-	String cmd = new groovy.json.JsonBuilder(cmdBody).toString() // library marker tpLink.tpl_api_smart, line 48
-	Map reqParams = [:] // library marker tpLink.tpl_api_smart, line 49
-	logDebug("sendSmartCmd: $cmdBody") // library marker tpLink.tpl_api_smart, line 50
-	if (getDataValue("protocol") == "klap") { // library marker tpLink.tpl_api_smart, line 51
-		byte[] keyByte = new JsonSlurper().parseText(encKey) // library marker tpLink.tpl_api_smart, line 52
-		byte[] ivByte = new JsonSlurper().parseText(encIv) // library marker tpLink.tpl_api_smart, line 53
-		byte[] sigByte = new JsonSlurper().parseText(encSig) // library marker tpLink.tpl_api_smart, line 54
-		String uri = "${getDataValue("baseUrl")}/request?seq=${state.seqNo + 1}" // library marker tpLink.tpl_api_smart, line 55
-		reqParams = getKlapParams(cmd, keyByte, ivByte, sigByte, state.seqNo, uri, cookie) // library marker tpLink.tpl_api_smart, line 56
-	} else { // library marker tpLink.tpl_api_smart, line 57
-		byte[] encKey = new JsonSlurper().parseText(encKey) // library marker tpLink.tpl_api_smart, line 58
-		byte[] encIv = new JsonSlurper().parseText(encIv) // library marker tpLink.tpl_api_smart, line 59
-		String uri = "${getDataValue("baseUrl")}?token=${token}" // library marker tpLink.tpl_api_smart, line 60
-		reqParams = getAesParams(cmd, encKey, encIv, uri, cookie) // library marker tpLink.tpl_api_smart, line 61
-	} // library marker tpLink.tpl_api_smart, line 62
-	asynchttpPost(parseMeth, reqParams, [dni: dni, retry: retry]) // library marker tpLink.tpl_api_smart, line 63
-} // library marker tpLink.tpl_api_smart, line 64
+//	===== Smart Implementation Interface ===== // library marker tpLink.tpl_api_smart, line 41
+def sendSmartCmd(cmdBody, retry = false, parseMeth = "parseSmartResp", dni = null) { // library marker tpLink.tpl_api_smart, line 42
+//	Insturmentation point for testing	 // library marker tpLink.tpl_api_smart, line 43
+//log.info "cmdBody: $cmdBody" // library marker tpLink.tpl_api_smart, line 44
+	if (retry == true) { // library marker tpLink.tpl_api_smart, line 45
+		Map cmdData = [cmdBody: cmdBody, action: parseMeth, retryMeth: "sendSmartCmd"] // library marker tpLink.tpl_api_smart, line 46
+		state.cmdData = cmdData // library marker tpLink.tpl_api_smart, line 47
+	} // library marker tpLink.tpl_api_smart, line 48
+	String cmd = new groovy.json.JsonBuilder(cmdBody).toString() // library marker tpLink.tpl_api_smart, line 49
+	Map reqParams = [:] // library marker tpLink.tpl_api_smart, line 50
+	logDebug("sendSmartCmd: $cmdBody") // library marker tpLink.tpl_api_smart, line 51
+	if (getDataValue("protocol") == "klap") { // library marker tpLink.tpl_api_smart, line 52
+		byte[] keyByte = new JsonSlurper().parseText(encKey) // library marker tpLink.tpl_api_smart, line 53
+		byte[] ivByte = new JsonSlurper().parseText(encIv) // library marker tpLink.tpl_api_smart, line 54
+		byte[] sigByte = new JsonSlurper().parseText(encSig) // library marker tpLink.tpl_api_smart, line 55
+		String uri = "${getDataValue("baseUrl")}/request?seq=${state.seqNo + 1}" // library marker tpLink.tpl_api_smart, line 56
+		reqParams = getKlapParams(cmd, keyByte, ivByte, sigByte, state.seqNo, uri, cookie) // library marker tpLink.tpl_api_smart, line 57
+	} else { // library marker tpLink.tpl_api_smart, line 58
+		byte[] encKey = new JsonSlurper().parseText(encKey) // library marker tpLink.tpl_api_smart, line 59
+		byte[] encIv = new JsonSlurper().parseText(encIv) // library marker tpLink.tpl_api_smart, line 60
+		String uri = "${getDataValue("baseUrl")}?token=${token}" // library marker tpLink.tpl_api_smart, line 61
+		reqParams = getAesParams(cmd, encKey, encIv, uri, cookie) // library marker tpLink.tpl_api_smart, line 62
+	} // library marker tpLink.tpl_api_smart, line 63
+	asynchttpPost(parseMeth, reqParams, [dni: dni, retry: retry]) // library marker tpLink.tpl_api_smart, line 64
+} // library marker tpLink.tpl_api_smart, line 65
 
-def smartNullParse(resp, data) { } // library marker tpLink.tpl_api_smart, line 66
+def smartNullParse(resp, data) { } // library marker tpLink.tpl_api_smart, line 67
 
-def parseSmartResp(resp, data) { // library marker tpLink.tpl_api_smart, line 68
-	Map logData = [method: "parseSmartResp"] // library marker tpLink.tpl_api_smart, line 69
-	def respData = parseKlapAesResp(resp) // library marker tpLink.tpl_api_smart, line 70
-	if (respData.cmdResp) { // library marker tpLink.tpl_api_smart, line 71
-		def result = respData.cmdResp.result // library marker tpLink.tpl_api_smart, line 72
-		result.responses.each { // library marker tpLink.tpl_api_smart, line 73
-			if (it.error_code == 0) { // library marker tpLink.tpl_api_smart, line 74
-				distSmartData(it) // library marker tpLink.tpl_api_smart, line 75
-			} else { // library marker tpLink.tpl_api_smart, line 76
-				logData << [devRespError: it] // library marker tpLink.tpl_api_smart, line 77
-				logDebug(logData) // library marker tpLink.tpl_api_smart, line 78
-			} // library marker tpLink.tpl_api_smart, line 79
-		} // library marker tpLink.tpl_api_smart, line 80
-	} else { // library marker tpLink.tpl_api_smart, line 81
-		logData << respData // library marker tpLink.tpl_api_smart, line 82
-		if (data.retry == true && systemPoll.contains("min")) { // library marker tpLink.tpl_api_smart, line 83
-			handleCommsError([status: respData.status, cryptoStatus: respData.cryptoStatus]) // library marker tpLink.tpl_api_smart, line 84
-		} // library marker tpLink.tpl_api_smart, line 85
-	} // library marker tpLink.tpl_api_smart, line 86
-	logDebug(logData) // library marker tpLink.tpl_api_smart, line 87
-} // library marker tpLink.tpl_api_smart, line 88
+def parseSmartResp(resp, data) { // library marker tpLink.tpl_api_smart, line 69
+	Map logData = [method: "parseSmartResp"] // library marker tpLink.tpl_api_smart, line 70
+	def respData = parseKlapAesResp(resp) // library marker tpLink.tpl_api_smart, line 71
+	if (respData.cmdResp) { // library marker tpLink.tpl_api_smart, line 72
+		def result = respData.cmdResp.result // library marker tpLink.tpl_api_smart, line 73
+		result.responses.each { // library marker tpLink.tpl_api_smart, line 74
+			if (it.error_code == 0) { // library marker tpLink.tpl_api_smart, line 75
+				distSmartData(it) // library marker tpLink.tpl_api_smart, line 76
+			} else { // library marker tpLink.tpl_api_smart, line 77
+				logData << [devRespError: it] // library marker tpLink.tpl_api_smart, line 78
+				logDebug(logData) // library marker tpLink.tpl_api_smart, line 79
+			} // library marker tpLink.tpl_api_smart, line 80
+		} // library marker tpLink.tpl_api_smart, line 81
+	} else { // library marker tpLink.tpl_api_smart, line 82
+		logData << respData // library marker tpLink.tpl_api_smart, line 83
+		if (data.retry == true && systemPoll.contains("min")) { // library marker tpLink.tpl_api_smart, line 84
+			handleCommsError([status: respData.status, cryptoStatus: respData.cryptoStatus]) // library marker tpLink.tpl_api_smart, line 85
+		} // library marker tpLink.tpl_api_smart, line 86
+	} // library marker tpLink.tpl_api_smart, line 87
+	logDebug(logData) // library marker tpLink.tpl_api_smart, line 88
+} // library marker tpLink.tpl_api_smart, line 89
 
-def parseKlapAesResp(resp) { // library marker tpLink.tpl_api_smart, line 90
-	Map logData = [method: "parseKlapAesResp", status: resp.status] // library marker tpLink.tpl_api_smart, line 91
-	if (resp.status == 200) { // library marker tpLink.tpl_api_smart, line 92
-		Map respData = [:] // library marker tpLink.tpl_api_smart, line 93
-		if (getDataValue("protocol") == "klap") { // library marker tpLink.tpl_api_smart, line 94
-			logData << [dataLength: resp.data.length()] // library marker tpLink.tpl_api_smart, line 95
-			respData << parseKlapData(resp) // library marker tpLink.tpl_api_smart, line 96
-		} else {  // library marker tpLink.tpl_api_smart, line 97
-			respData << parseAesData(resp) // library marker tpLink.tpl_api_smart, line 98
-		} // library marker tpLink.tpl_api_smart, line 99
-		logData << [cryptoStatus: respData.cryptoStatus, respData: respData] // library marker tpLink.tpl_api_smart, line 100
-		if (respData.cryptoStatus == "OK" && respData.cmdResp != [:]) { // library marker tpLink.tpl_api_smart, line 101
-			setCommsError("OK") // library marker tpLink.tpl_api_smart, line 102
-			return respData // library marker tpLink.tpl_api_smart, line 103
-		} // library marker tpLink.tpl_api_smart, line 104
-	} else { // library marker tpLink.tpl_api_smart, line 105
-		logData << [respStatus: resp.status, headers: resp.headers] // library marker tpLink.tpl_api_smart, line 106
-		logDebug(logData) // library marker tpLink.tpl_api_smart, line 107
-	} // library marker tpLink.tpl_api_smart, line 108
-	return logData // library marker tpLink.tpl_api_smart, line 109
-} // library marker tpLink.tpl_api_smart, line 110
+def parseKlapAesResp(resp) { // library marker tpLink.tpl_api_smart, line 91
+	Map logData = [method: "parseKlapAesResp", status: resp.status] // library marker tpLink.tpl_api_smart, line 92
+	if (resp.status == 200) { // library marker tpLink.tpl_api_smart, line 93
+		Map respData = [:] // library marker tpLink.tpl_api_smart, line 94
+		if (getDataValue("protocol") == "klap") { // library marker tpLink.tpl_api_smart, line 95
+			logData << [dataLength: resp.data.length()] // library marker tpLink.tpl_api_smart, line 96
+			respData << parseKlapData(resp) // library marker tpLink.tpl_api_smart, line 97
+		} else {  // library marker tpLink.tpl_api_smart, line 98
+			respData << parseAesData(resp) // library marker tpLink.tpl_api_smart, line 99
+		} // library marker tpLink.tpl_api_smart, line 100
+		logData << [cryptoStatus: respData.cryptoStatus, respData: respData] // library marker tpLink.tpl_api_smart, line 101
+		if (respData.cryptoStatus == "OK" && respData.cmdResp != [:]) { // library marker tpLink.tpl_api_smart, line 102
+			setCommsError("OK") // library marker tpLink.tpl_api_smart, line 103
+			return respData // library marker tpLink.tpl_api_smart, line 104
+		} // library marker tpLink.tpl_api_smart, line 105
+	} else { // library marker tpLink.tpl_api_smart, line 106
+		logData << [respStatus: resp.status, headers: resp.headers] // library marker tpLink.tpl_api_smart, line 107
+		logDebug(logData) // library marker tpLink.tpl_api_smart, line 108
+	} // library marker tpLink.tpl_api_smart, line 109
+	return logData // library marker tpLink.tpl_api_smart, line 110
+} // library marker tpLink.tpl_api_smart, line 111
 
-def distSmartData(devResp) { // library marker tpLink.tpl_api_smart, line 112
-	def key = devResp.method // library marker tpLink.tpl_api_smart, line 113
-	def methResp = devResp.result // library marker tpLink.tpl_api_smart, line 114
-	logDebug("[method: distSmartData, $key: $methResp]") // library marker tpLink.tpl_api_smart, line 115
-//	Insturmentation point for testing	 // library marker tpLink.tpl_api_smart, line 116
-//log.info "[method: distSmartData, $key: $methResp]" // library marker tpLink.tpl_api_smart, line 117
-	switch(key) { // library marker tpLink.tpl_api_smart, line 118
-		case "get_device_info": // library marker tpLink.tpl_api_smart, line 119
-			parse_get_device_info(methResp) // library marker tpLink.tpl_api_smart, line 120
-			parseNameUpdate(methResp) // library marker tpLink.tpl_api_smart, line 121
-			break // library marker tpLink.tpl_api_smart, line 122
-		case "get_current_power": // library marker tpLink.tpl_api_smart, line 123
-			parse_get_current_power(methResp) // library marker tpLink.tpl_api_smart, line 124
-			break // library marker tpLink.tpl_api_smart, line 125
-		case "get_device_usage": // library marker tpLink.tpl_api_smart, line 126
-			parse_get_device_usage(methResp) // library marker tpLink.tpl_api_smart, line 127
-			break // library marker tpLink.tpl_api_smart, line 128
-		case "get_on_off_gradually_info": // library marker tpLink.tpl_api_smart, line 129
-			parse_get_on_off_gradually_info(methResp) // library marker tpLink.tpl_api_smart, line 130
-			break // library marker tpLink.tpl_api_smart, line 131
-		case "get_child_device_list": // library marker tpLink.tpl_api_smart, line 132
-			parse_get_child_device_list(methResp) // library marker tpLink.tpl_api_smart, line 133
-			break // library marker tpLink.tpl_api_smart, line 134
-		case "get_led_info": // library marker tpLink.tpl_api_smart, line 135
-			parse_get_led_info(methResp) // library marker tpLink.tpl_api_smart, line 136
-			break // library marker tpLink.tpl_api_smart, line 137
-		case "device_reboot": // library marker tpLink.tpl_api_smart, line 138
-			runIn(10, configure) // library marker tpLink.tpl_api_smart, line 139
-		default: // library marker tpLink.tpl_api_smart, line 140
-			if (!devResp.method.contains("set_")) { // library marker tpLink.tpl_api_smart, line 141
-				Map logData = [method: "distGetData", key: key,  // library marker tpLink.tpl_api_smart, line 142
-							   methResp: methResp, status: "unprocessed"] // library marker tpLink.tpl_api_smart, line 143
-				logDebug(logData) // library marker tpLink.tpl_api_smart, line 144
-			} // library marker tpLink.tpl_api_smart, line 145
-	} // library marker tpLink.tpl_api_smart, line 146
-} // library marker tpLink.tpl_api_smart, line 147
+def distSmartData(devResp) { // library marker tpLink.tpl_api_smart, line 113
+	def key = devResp.method // library marker tpLink.tpl_api_smart, line 114
+	def methResp = devResp.result // library marker tpLink.tpl_api_smart, line 115
+	logDebug("[method: distSmartData, $key: $methResp]") // library marker tpLink.tpl_api_smart, line 116
+//	Insturmentation point for testing	 // library marker tpLink.tpl_api_smart, line 117
+//log.info "[method: distSmartData, $key: $methResp]" // library marker tpLink.tpl_api_smart, line 118
+	switch(key) { // library marker tpLink.tpl_api_smart, line 119
+		case "get_device_info": // library marker tpLink.tpl_api_smart, line 120
+			parse_get_device_info(methResp) // library marker tpLink.tpl_api_smart, line 121
+			parseNameUpdate(methResp) // library marker tpLink.tpl_api_smart, line 122
+			break // library marker tpLink.tpl_api_smart, line 123
+		case "get_current_power": // library marker tpLink.tpl_api_smart, line 124
+			parse_get_current_power(methResp) // library marker tpLink.tpl_api_smart, line 125
+			break // library marker tpLink.tpl_api_smart, line 126
+		case "get_device_usage": // library marker tpLink.tpl_api_smart, line 127
+			parse_get_device_usage(methResp) // library marker tpLink.tpl_api_smart, line 128
+			break // library marker tpLink.tpl_api_smart, line 129
+		case "get_on_off_gradually_info": // library marker tpLink.tpl_api_smart, line 130
+			parse_get_on_off_gradually_info(methResp) // library marker tpLink.tpl_api_smart, line 131
+			break // library marker tpLink.tpl_api_smart, line 132
+		case "get_child_device_list": // library marker tpLink.tpl_api_smart, line 133
+			parse_get_child_device_list(methResp) // library marker tpLink.tpl_api_smart, line 134
+			break // library marker tpLink.tpl_api_smart, line 135
+		case "get_led_info": // library marker tpLink.tpl_api_smart, line 136
+			parse_get_led_info(methResp) // library marker tpLink.tpl_api_smart, line 137
+			break // library marker tpLink.tpl_api_smart, line 138
+		case "device_reboot": // library marker tpLink.tpl_api_smart, line 139
+			runIn(10, configure) // library marker tpLink.tpl_api_smart, line 140
+		default: // library marker tpLink.tpl_api_smart, line 141
+			if (!devResp.method.contains("set_")) { // library marker tpLink.tpl_api_smart, line 142
+				Map logData = [method: "distGetData", key: key,  // library marker tpLink.tpl_api_smart, line 143
+							   methResp: methResp, status: "unprocessed"] // library marker tpLink.tpl_api_smart, line 144
+				logDebug(logData) // library marker tpLink.tpl_api_smart, line 145
+			} // library marker tpLink.tpl_api_smart, line 146
+	} // library marker tpLink.tpl_api_smart, line 147
+} // library marker tpLink.tpl_api_smart, line 148
 
 // ~~~~~ end include (1079) tpLink.tpl_api_smart ~~~~~
 
@@ -1033,140 +1034,142 @@ void iotRefresh() { // library marker tpLink.tpl_api_iot, line 11
 } // library marker tpLink.tpl_api_iot, line 16
 
 void iotPoll() { // library marker tpLink.tpl_api_iot, line 18
-	state.eventType = "manual" // library marker tpLink.tpl_api_iot, line 19
-	Map cmdBody = [system: [get_sysinfo: []]] // library marker tpLink.tpl_api_iot, line 20
-	sendIotCmd(cmdBody, true) // library marker tpLink.tpl_api_iot, line 21
-	if (emEnable) {runIn(1, iotGetRealtime) } // library marker tpLink.tpl_api_iot, line 22
-} // library marker tpLink.tpl_api_iot, line 23
+//	state.eventType = "manual" // library marker tpLink.tpl_api_iot, line 19
+	state.eventType = "physical" // library marker tpLink.tpl_api_iot, line 20
+	Map cmdBody = [system: [get_sysinfo: []]] // library marker tpLink.tpl_api_iot, line 21
+	sendIotCmd(cmdBody, true) // library marker tpLink.tpl_api_iot, line 22
+	if (emEnable) {runIn(1, iotGetRealtime) } // library marker tpLink.tpl_api_iot, line 23
+} // library marker tpLink.tpl_api_iot, line 24
 
-//	Used in multiple drivers / capabilities // library marker tpLink.tpl_api_iot, line 25
-def setIotColor(params) { // library marker tpLink.tpl_api_iot, line 26
-	Map cmdBody = ["${SYSTEM}": ["${LIGHT_CMD}": params]] // library marker tpLink.tpl_api_iot, line 27
-	sendIotCmd(cmdBody, true) // library marker tpLink.tpl_api_iot, line 28
-	if (emEnable) { runIn(5, iotGetRealtime) } // library marker tpLink.tpl_api_iot, line 29
-} // library marker tpLink.tpl_api_iot, line 30
+//	Used in multiple drivers / capabilities // library marker tpLink.tpl_api_iot, line 26
+def setIotColor(params) { // library marker tpLink.tpl_api_iot, line 27
+	Map cmdBody = ["${SYSTEM}": ["${LIGHT_CMD}": params]] // library marker tpLink.tpl_api_iot, line 28
+	sendIotCmd(cmdBody, true) // library marker tpLink.tpl_api_iot, line 29
+	if (emEnable) { runIn(5, iotGetRealtime) } // library marker tpLink.tpl_api_iot, line 30
+} // library marker tpLink.tpl_api_iot, line 31
 
-//	===== Iot Implementation Interface ===== // library marker tpLink.tpl_api_iot, line 32
-def sendIotCmd(cmdBody, retry = false, action = null, dni = null) { // library marker tpLink.tpl_api_iot, line 33
-	String cmd = new groovy.json.JsonBuilder(cmdBody).toString() // library marker tpLink.tpl_api_iot, line 34
-	if (retry == true) { // library marker tpLink.tpl_api_iot, line 35
-		Map cmdData = [cmdBody: cmdBody, action: action, retryMeth: "sendIotCmd"] // library marker tpLink.tpl_api_iot, line 36
-		state.cmdData = cmdData // library marker tpLink.tpl_api_iot, line 37
-	} // library marker tpLink.tpl_api_iot, line 38
-	if (getDataValue("protocol") == "xor") { // library marker tpLink.tpl_api_iot, line 39
-		logDebug("[method: sendIotCmd(XOR), cmdBody: $cmdBody, RETRY: $retry]") // library marker tpLink.tpl_api_iot, line 40
-//	Insturmentation point for testing	 // library marker tpLink.tpl_api_iot, line 41
-//log.info "[method: sendIotCmd(XOR), cmdBody: $cmdBody, RETRY: $retry]" // library marker tpLink.tpl_api_iot, line 42
-		if (action == null) { action = "parseIotXorResp" } // library marker tpLink.tpl_api_iot, line 43
-		if (retry == true) { // library marker tpLink.tpl_api_iot, line 44
-			runIn(10, udpTimeout) // library marker tpLink.tpl_api_iot, line 45
-		} // library marker tpLink.tpl_api_iot, line 46
-		sendUdp(outputXOR(cmd), action, getDataValue("baseUrl")) // library marker tpLink.tpl_api_iot, line 47
-	} else { // library marker tpLink.tpl_api_iot, line 48
-		logDebug("[method: sendIotCmd(SMART), cmdBody: $cmdBody, RETRY: $retry]") // library marker tpLink.tpl_api_iot, line 49
-//	Insturmentation point for testing	 // library marker tpLink.tpl_api_iot, line 50
-//log.info "[method: sendIotCmd(SMART), cmdBody: $cmdBody, RETRY: $retry]" // library marker tpLink.tpl_api_iot, line 51
-		if (action == null) { action = "parseIotKlapResp" } // library marker tpLink.tpl_api_iot, line 52
-		if (encKey == null) { // library marker tpLink.tpl_api_iot, line 53
-			//	Only encountered on transition from XOR to UPD first time // library marker tpLink.tpl_api_iot, line 54
-			//	and does not impact transition. // library marker tpLink.tpl_api_iot, line 55
-			return // library marker tpLink.tpl_api_iot, line 56
-		} // library marker tpLink.tpl_api_iot, line 57
-		byte[] keyByte = new JsonSlurper().parseText(encKey) // library marker tpLink.tpl_api_iot, line 58
-		byte[] ivByte = new JsonSlurper().parseText(encIv) // library marker tpLink.tpl_api_iot, line 59
-		byte[] sigByte = new JsonSlurper().parseText(encSig) // library marker tpLink.tpl_api_iot, line 60
-		String uri = "${getDataValue("baseUrl")}/request?seq=${state.seqNo + 1}" // library marker tpLink.tpl_api_iot, line 61
-		Map reqParams = getKlapParams(cmd, keyByte, ivByte, sigByte, state.seqNo, uri, cookie) // library marker tpLink.tpl_api_iot, line 62
-		asynchttpPost(action, reqParams, [data: [dni:dni, retry: retry]]) // library marker tpLink.tpl_api_iot, line 63
-	} // library marker tpLink.tpl_api_iot, line 64
-} // library marker tpLink.tpl_api_iot, line 65
+//	===== Iot Implementation Interface ===== // library marker tpLink.tpl_api_iot, line 33
+def sendIotCmd(cmdBody, retry = false, action = null, dni = null) { // library marker tpLink.tpl_api_iot, line 34
+	String cmd = new groovy.json.JsonBuilder(cmdBody).toString() // library marker tpLink.tpl_api_iot, line 35
+	if (retry == true) { // library marker tpLink.tpl_api_iot, line 36
+		Map cmdData = [cmdBody: cmdBody, action: action, retryMeth: "sendIotCmd"] // library marker tpLink.tpl_api_iot, line 37
+		state.cmdData = cmdData // library marker tpLink.tpl_api_iot, line 38
+	} // library marker tpLink.tpl_api_iot, line 39
+	if (getDataValue("protocol") == "xor") { // library marker tpLink.tpl_api_iot, line 40
+		logDebug("[method: sendIotCmd(XOR), cmdBody: $cmdBody, RETRY: $retry]") // library marker tpLink.tpl_api_iot, line 41
+//	Insturmentation point for testing	 // library marker tpLink.tpl_api_iot, line 42
+//log.info "[method: sendIotCmd(XOR), cmdBody: $cmdBody, RETRY: $retry]" // library marker tpLink.tpl_api_iot, line 43
+		if (action == null) { action = "parseIotXorResp" } // library marker tpLink.tpl_api_iot, line 44
+		if (retry == true) { // library marker tpLink.tpl_api_iot, line 45
+			runIn(10, udpTimeout) // library marker tpLink.tpl_api_iot, line 46
+		} // library marker tpLink.tpl_api_iot, line 47
+		sendUdp(outputXOR(cmd), action, getDataValue("baseUrl")) // library marker tpLink.tpl_api_iot, line 48
+	} else { // library marker tpLink.tpl_api_iot, line 49
+		logDebug("[method: sendIotCmd(SMART), cmdBody: $cmdBody, RETRY: $retry]") // library marker tpLink.tpl_api_iot, line 50
+//	Insturmentation point for testing	 // library marker tpLink.tpl_api_iot, line 51
+//log.info "[method: sendIotCmd(SMART), cmdBody: $cmdBody, RETRY: $retry]" // library marker tpLink.tpl_api_iot, line 52
+		if (action == null) { action = "parseIotKlapResp" } // library marker tpLink.tpl_api_iot, line 53
+		if (encKey == null) { // library marker tpLink.tpl_api_iot, line 54
+			//	Only encountered on transition from XOR to UPD first time // library marker tpLink.tpl_api_iot, line 55
+			//	and does not impact transition. // library marker tpLink.tpl_api_iot, line 56
+			return // library marker tpLink.tpl_api_iot, line 57
+		} // library marker tpLink.tpl_api_iot, line 58
+		byte[] keyByte = new JsonSlurper().parseText(encKey) // library marker tpLink.tpl_api_iot, line 59
+		byte[] ivByte = new JsonSlurper().parseText(encIv) // library marker tpLink.tpl_api_iot, line 60
+		byte[] sigByte = new JsonSlurper().parseText(encSig) // library marker tpLink.tpl_api_iot, line 61
+		String uri = "${getDataValue("baseUrl")}/request?seq=${state.seqNo + 1}" // library marker tpLink.tpl_api_iot, line 62
+		Map reqParams = getKlapParams(cmd, keyByte, ivByte, sigByte, state.seqNo, uri, cookie) // library marker tpLink.tpl_api_iot, line 63
+		asynchttpPost(action, reqParams, [data: [dni:dni, retry: retry]]) // library marker tpLink.tpl_api_iot, line 64
+	} // library marker tpLink.tpl_api_iot, line 65
+} // library marker tpLink.tpl_api_iot, line 66
 
-def iotNullParse(message) {} // library marker tpLink.tpl_api_iot, line 67
+def iotNullParse(message) {} // library marker tpLink.tpl_api_iot, line 68
 
-def parseIotXorResp(message) { // library marker tpLink.tpl_api_iot, line 69
-	if (message == "udpTimeout") { // library marker tpLink.tpl_api_iot, line 70
-		if (systemPoll.contains("min")) { // library marker tpLink.tpl_api_iot, line 71
-			handleCommsError(message) // library marker tpLink.tpl_api_iot, line 72
-			Map logData = [method: "parseXorResp", error: message] // library marker tpLink.tpl_api_iot, line 73
-			logDebug(logData) // library marker tpLink.tpl_api_iot, line 74
-		} // library marker tpLink.tpl_api_iot, line 75
-	} else { // library marker tpLink.tpl_api_iot, line 76
-		Map respData = parseUdp(message, "xor") // library marker tpLink.tpl_api_iot, line 77
-		if (respData.status == "ok") { // library marker tpLink.tpl_api_iot, line 78
-			setCommsError("OK") // library marker tpLink.tpl_api_iot, line 79
-			respData.cmdResp.each { key, devData -> // library marker tpLink.tpl_api_iot, line 80
-				distIotData(key, devData) // library marker tpLink.tpl_api_iot, line 81
-			} // library marker tpLink.tpl_api_iot, line 82
-		} else { // library marker tpLink.tpl_api_iot, line 83
-			Map logData = [method: "parseXorResp", respData: respData] // library marker tpLink.tpl_api_iot, line 84
-			logWarn(logData) // library marker tpLink.tpl_api_iot, line 85
-		} // library marker tpLink.tpl_api_iot, line 86
-	} // library marker tpLink.tpl_api_iot, line 87
-} // library marker tpLink.tpl_api_iot, line 88
+def parseIotXorResp(message) { // library marker tpLink.tpl_api_iot, line 70
+	if (message == "udpTimeout") { // library marker tpLink.tpl_api_iot, line 71
+		if (systemPoll.contains("min")) { // library marker tpLink.tpl_api_iot, line 72
+			handleCommsError(message) // library marker tpLink.tpl_api_iot, line 73
+			Map logData = [method: "parseXorResp", error: message] // library marker tpLink.tpl_api_iot, line 74
+			logDebug(logData) // library marker tpLink.tpl_api_iot, line 75
+		} // library marker tpLink.tpl_api_iot, line 76
+	} else { // library marker tpLink.tpl_api_iot, line 77
+		Map respData = parseUdp(message, "xor") // library marker tpLink.tpl_api_iot, line 78
+		if (respData.status == "ok") { // library marker tpLink.tpl_api_iot, line 79
+			setCommsError("OK") // library marker tpLink.tpl_api_iot, line 80
+			respData.cmdResp.each { key, devData -> // library marker tpLink.tpl_api_iot, line 81
+				distIotData(key, devData) // library marker tpLink.tpl_api_iot, line 82
+			} // library marker tpLink.tpl_api_iot, line 83
+		} else { // library marker tpLink.tpl_api_iot, line 84
+			Map logData = [method: "parseXorResp", respData: respData] // library marker tpLink.tpl_api_iot, line 85
+			logWarn(logData) // library marker tpLink.tpl_api_iot, line 86
+		} // library marker tpLink.tpl_api_iot, line 87
+	} // library marker tpLink.tpl_api_iot, line 88
+} // library marker tpLink.tpl_api_iot, line 89
 
-def parseIotKlapResp(resp, data) { // library marker tpLink.tpl_api_iot, line 90
-	def respData = parseKlapAesResp(resp) // library marker tpLink.tpl_api_iot, line 91
-	def cryptoStatus = respData.cryptoStatus // library marker tpLink.tpl_api_iot, line 92
-	if (resp.status == 200 && cryptoStatus == "OK") { // library marker tpLink.tpl_api_iot, line 93
-		setCommsError("OK") // library marker tpLink.tpl_api_iot, line 94
-		respData.cmdResp.each { key, devData -> // library marker tpLink.tpl_api_iot, line 95
-			distIotData(key, devData) // library marker tpLink.tpl_api_iot, line 96
-		} // library marker tpLink.tpl_api_iot, line 97
-	} else { // library marker tpLink.tpl_api_iot, line 98
-		Map logData = [method: "parseIotKlapResp", retry: data.retry,  // library marker tpLink.tpl_api_iot, line 99
-					   httpStatus: resp.status, cryptoStatus: cryptoStatus] // library marker tpLink.tpl_api_iot, line 100
-		if (data.retry == true && systemPoll.contains("min")) { // library marker tpLink.tpl_api_iot, line 101
-			handleCommsError([httpStatus: resp.status, cryptoStatus: cryptoStatus]) // library marker tpLink.tpl_api_iot, line 102
-		} // library marker tpLink.tpl_api_iot, line 103
-		logDebug(logData) // library marker tpLink.tpl_api_iot, line 104
-	} // library marker tpLink.tpl_api_iot, line 105
-} // library marker tpLink.tpl_api_iot, line 106
+def parseIotKlapResp(resp, data) { // library marker tpLink.tpl_api_iot, line 91
+	def respData = parseKlapAesResp(resp) // library marker tpLink.tpl_api_iot, line 92
+	def cryptoStatus = respData.cryptoStatus // library marker tpLink.tpl_api_iot, line 93
+	if (resp.status == 200 && cryptoStatus == "OK") { // library marker tpLink.tpl_api_iot, line 94
+		setCommsError("OK") // library marker tpLink.tpl_api_iot, line 95
+		respData.cmdResp.each { key, devData -> // library marker tpLink.tpl_api_iot, line 96
+			distIotData(key, devData) // library marker tpLink.tpl_api_iot, line 97
+		} // library marker tpLink.tpl_api_iot, line 98
+	} else { // library marker tpLink.tpl_api_iot, line 99
+		Map logData = [method: "parseIotKlapResp", retry: data.retry,  // library marker tpLink.tpl_api_iot, line 100
+					   httpStatus: resp.status, cryptoStatus: cryptoStatus] // library marker tpLink.tpl_api_iot, line 101
+		if (data.retry == true && systemPoll.contains("min")) { // library marker tpLink.tpl_api_iot, line 102
+			handleCommsError([httpStatus: resp.status, cryptoStatus: cryptoStatus]) // library marker tpLink.tpl_api_iot, line 103
+		} // library marker tpLink.tpl_api_iot, line 104
+		logDebug(logData) // library marker tpLink.tpl_api_iot, line 105
+	} // library marker tpLink.tpl_api_iot, line 106
+} // library marker tpLink.tpl_api_iot, line 107
 
-void distIotData(key, devData) { // library marker tpLink.tpl_api_iot, line 108
-	logDebug("[method: distIotData: $key: $devData]") // library marker tpLink.tpl_api_iot, line 109
-//	Insturmentation point for testing	 // library marker tpLink.tpl_api_iot, line 110
-//log.info "[method: distIotData: $key: $devData]" // library marker tpLink.tpl_api_iot, line 111
-	switch(key) { // library marker tpLink.tpl_api_iot, line 112
-		case "system": // library marker tpLink.tpl_api_iot, line 113
-			if (devData.get_sysinfo) { // library marker tpLink.tpl_api_iot, line 114
-				devData = devData.get_sysinfo // library marker tpLink.tpl_api_iot, line 115
-				if (nameSync != "no") { // library marker tpLink.tpl_api_iot, line 116
-					parseNameUpdate(devData) // library marker tpLink.tpl_api_iot, line 117
-				} // library marker tpLink.tpl_api_iot, line 118
-				if (devData.light_state) { // library marker tpLink.tpl_api_iot, line 119
-					devData = devData.light_state // library marker tpLink.tpl_api_iot, line 120
-				} // library marker tpLink.tpl_api_iot, line 121
-				parse_system(devData) // library marker tpLink.tpl_api_iot, line 122
-			} // library marker tpLink.tpl_api_iot, line 123
-			break // library marker tpLink.tpl_api_iot, line 124
-		case "get_light_state": // library marker tpLink.tpl_api_iot, line 125
-			parse_system(devData) // library marker tpLink.tpl_api_iot, line 126
-			break // library marker tpLink.tpl_api_iot, line 127
-		case "smartlife.iot.smartbulb.lightingservice": // library marker tpLink.tpl_api_iot, line 128
-			parse_system(devData.transition_light_state) // library marker tpLink.tpl_api_iot, line 129
-			break // library marker tpLink.tpl_api_iot, line 130
-		case "smartlife.iot.lightStrip": // library marker tpLink.tpl_api_iot, line 131
-			iotRefresh() // library marker tpLink.tpl_api_iot, line 132
-			break // library marker tpLink.tpl_api_iot, line 133
-		case "smartlife.iot.dimmer": // library marker tpLink.tpl_api_iot, line 134
-			if(devData.get_dimmer_parameters) { // library marker tpLink.tpl_api_iot, line 135
-				parse_get_dimmer_parameters(devData.get_dimmer_parameters) // library marker tpLink.tpl_api_iot, line 136
-			} // library marker tpLink.tpl_api_iot, line 137
-			break // library marker tpLink.tpl_api_iot, line 138
-		case "smartlife.iot.common.emeter": // library marker tpLink.tpl_api_iot, line 139
-		case "emeter": // library marker tpLink.tpl_api_iot, line 140
-			parse_emeter(devData) // library marker tpLink.tpl_api_iot, line 141
-			break // library marker tpLink.tpl_api_iot, line 142
-		case "smartlife.iot.common.system": // library marker tpLink.tpl_api_iot, line 143
-			if (devData.reboot) { // library marker tpLink.tpl_api_iot, line 144
-				runIn(10, updated)  // library marker tpLink.tpl_api_iot, line 145
-			} // library marker tpLink.tpl_api_iot, line 146
-			break // library marker tpLink.tpl_api_iot, line 147
-		default: // library marker tpLink.tpl_api_iot, line 148
-			Map logData = [method: "distIotData", key: key, devData: devData, status: "unprocessed"] // library marker tpLink.tpl_api_iot, line 149
-			logDebug(logData) // library marker tpLink.tpl_api_iot, line 150
-	} // library marker tpLink.tpl_api_iot, line 151
-} // library marker tpLink.tpl_api_iot, line 152
+void distIotData(key, devData) { // library marker tpLink.tpl_api_iot, line 109
+	logDebug("[method: distIotData: $key: $devData]") // library marker tpLink.tpl_api_iot, line 110
+//	Insturmentation point for testing	 // library marker tpLink.tpl_api_iot, line 111
+//log.info "[method: distIotData: $key: $devData]" // library marker tpLink.tpl_api_iot, line 112
+	switch(key) { // library marker tpLink.tpl_api_iot, line 113
+		case "system": // library marker tpLink.tpl_api_iot, line 114
+			if (devData.get_sysinfo) { // library marker tpLink.tpl_api_iot, line 115
+				devData = devData.get_sysinfo // library marker tpLink.tpl_api_iot, line 116
+				if (nameSync != "no") { // library marker tpLink.tpl_api_iot, line 117
+					parseNameUpdate(devData) // library marker tpLink.tpl_api_iot, line 118
+				} // library marker tpLink.tpl_api_iot, line 119
+				if (devData.light_state) { // library marker tpLink.tpl_api_iot, line 120
+					devData = devData.light_state // library marker tpLink.tpl_api_iot, line 121
+				} // library marker tpLink.tpl_api_iot, line 122
+				parse_system(devData) // library marker tpLink.tpl_api_iot, line 123
+			} // library marker tpLink.tpl_api_iot, line 124
+			break // library marker tpLink.tpl_api_iot, line 125
+		case "get_light_state": // library marker tpLink.tpl_api_iot, line 126
+			parse_system(devData) // library marker tpLink.tpl_api_iot, line 127
+			break // library marker tpLink.tpl_api_iot, line 128
+		case "smartlife.iot.smartbulb.lightingservice": // library marker tpLink.tpl_api_iot, line 129
+			parse_system(devData.transition_light_state) // library marker tpLink.tpl_api_iot, line 130
+			break // library marker tpLink.tpl_api_iot, line 131
+		case "smartlife.iot.lightStrip": // library marker tpLink.tpl_api_iot, line 132
+			iotRefresh() // library marker tpLink.tpl_api_iot, line 133
+			break // library marker tpLink.tpl_api_iot, line 134
+		case "smartlife.iot.dimmer": // library marker tpLink.tpl_api_iot, line 135
+			if(devData.get_dimmer_parameters) { // library marker tpLink.tpl_api_iot, line 136
+				parse_get_dimmer_parameters(devData.get_dimmer_parameters) // library marker tpLink.tpl_api_iot, line 137
+			} // library marker tpLink.tpl_api_iot, line 138
+			break // library marker tpLink.tpl_api_iot, line 139
+		case "smartlife.iot.common.emeter": // library marker tpLink.tpl_api_iot, line 140
+		case "emeter": // library marker tpLink.tpl_api_iot, line 141
+			parse_emeter(devData) // library marker tpLink.tpl_api_iot, line 142
+			break // library marker tpLink.tpl_api_iot, line 143
+		case "smartlife.iot.common.system": // library marker tpLink.tpl_api_iot, line 144
+			if (devData.reboot) { runIn(10, updated) } // library marker tpLink.tpl_api_iot, line 145
+			break // library marker tpLink.tpl_api_iot, line 146
+		case "smartlife.iot.lighting_effect": // library marker tpLink.tpl_api_iot, line 147
+			parse_get_lighting_effect(devData) // library marker tpLink.tpl_api_iot, line 148
+			break // library marker tpLink.tpl_api_iot, line 149
+		default: // library marker tpLink.tpl_api_iot, line 150
+			Map logData = [method: "distIotData", key: key, devData: devData, status: "unprocessed"] // library marker tpLink.tpl_api_iot, line 151
+			logDebug(logData) // library marker tpLink.tpl_api_iot, line 152
+	} // library marker tpLink.tpl_api_iot, line 153
+} // library marker tpLink.tpl_api_iot, line 154
 
 // ~~~~~ end include (1078) tpLink.tpl_api_iot ~~~~~
 
@@ -1348,81 +1351,84 @@ def klapHandshake2(loginHash, cookie, devData) { // library marker tpLink.tpl_pr
 } // library marker tpLink.tpl_prot_klap, line 175
 
 def parseKlapHandshake2(resp, devData) { // library marker tpLink.tpl_prot_klap, line 177
-	Map logData = [method: "parseKlapHandshake2", devData: devData] // library marker tpLink.tpl_prot_klap, line 178
-	if (resp.status == 200) { // library marker tpLink.tpl_prot_klap, line 179
-		logData << [respStatus: "Login OK"] // library marker tpLink.tpl_prot_klap, line 180
-		if (device) { // library marker tpLink.tpl_prot_klap, line 181
-			setCommsError("OK") // library marker tpLink.tpl_prot_klap, line 182
-			runIn(1, refresh) // library marker tpLink.tpl_prot_klap, line 183
-		} else { // library marker tpLink.tpl_prot_klap, line 184
-			sendKlapDataCmd(devData) // library marker tpLink.tpl_prot_klap, line 185
-		} // library marker tpLink.tpl_prot_klap, line 186
-		logDebug(logData) // library marker tpLink.tpl_prot_klap, line 187
-	} else { // library marker tpLink.tpl_prot_klap, line 188
-		logData << [respStatus: "LOGIN FAILED", reason: "ERROR in HTTP response", // library marker tpLink.tpl_prot_klap, line 189
-					resp: resp.properties] // library marker tpLink.tpl_prot_klap, line 190
-		log.warn logData  // library marker tpLink.tpl_prot_klap, line 191
-	} // library marker tpLink.tpl_prot_klap, line 192
-} // library marker tpLink.tpl_prot_klap, line 193
+//	CHANGE: remove most of devData from base logging. 	 // library marker tpLink.tpl_prot_klap, line 178
+//	Map logData = [method: "parseKlapHandshake2", devData: devData] // library marker tpLink.tpl_prot_klap, line 179
+	Map logData = [method: "parseKlapHandshake2", alias: devData.alias] // library marker tpLink.tpl_prot_klap, line 180
+	if (resp.status == 200) { // library marker tpLink.tpl_prot_klap, line 181
+		logData << [respStatus: "Login OK"] // library marker tpLink.tpl_prot_klap, line 182
+		if (device) { // library marker tpLink.tpl_prot_klap, line 183
+			setCommsError("OK") // library marker tpLink.tpl_prot_klap, line 184
+			runIn(1, refresh) // library marker tpLink.tpl_prot_klap, line 185
+		} else { // library marker tpLink.tpl_prot_klap, line 186
+			sendKlapDataCmd(devData) // library marker tpLink.tpl_prot_klap, line 187
+		} // library marker tpLink.tpl_prot_klap, line 188
+		logDebug(logData) // library marker tpLink.tpl_prot_klap, line 189
+	} else { // library marker tpLink.tpl_prot_klap, line 190
+//	CHANGE - Added dev data to log.warn. // library marker tpLink.tpl_prot_klap, line 191
+		logData << [respStatus: "LOGIN FAILED", devData: devData, reason: "ERROR in HTTP response", // library marker tpLink.tpl_prot_klap, line 192
+					resp: resp.properties] // library marker tpLink.tpl_prot_klap, line 193
+		log.warn logData  // library marker tpLink.tpl_prot_klap, line 194
+	} // library marker tpLink.tpl_prot_klap, line 195
+} // library marker tpLink.tpl_prot_klap, line 196
 
-def getKlapParams(cmd, encKey, encIv, encSig, seqNo, uri, cookie) { // library marker tpLink.tpl_prot_klap, line 195
-	seqNo = seqNo + 1 // library marker tpLink.tpl_prot_klap, line 196
-	if (device) { state.seqNo = seqNo } // library marker tpLink.tpl_prot_klap, line 197
-	Map encryptedData = klapEncrypt(cmd.getBytes(), encKey,  // library marker tpLink.tpl_prot_klap, line 198
-									encIv, encSig, seqNo) // library marker tpLink.tpl_prot_klap, line 199
-	Map reqParams = [ // library marker tpLink.tpl_prot_klap, line 200
-		uri: uri, // library marker tpLink.tpl_prot_klap, line 201
-		body: encryptedData.cipherData, // library marker tpLink.tpl_prot_klap, line 202
-		headers: ["Cookie": cookie, "Connection": "close"], // library marker tpLink.tpl_prot_klap, line 203
-		contentType: "application/octet-stream", // library marker tpLink.tpl_prot_klap, line 204
-		requestContentType: "application/octet-stream", // library marker tpLink.tpl_prot_klap, line 205
-		timeout: 5, // library marker tpLink.tpl_prot_klap, line 206
-		ignoreSSLIssues: true] // library marker tpLink.tpl_prot_klap, line 207
-	return reqParams // library marker tpLink.tpl_prot_klap, line 208
-} // library marker tpLink.tpl_prot_klap, line 209
+def getKlapParams(cmd, encKey, encIv, encSig, seqNo, uri, cookie) { // library marker tpLink.tpl_prot_klap, line 198
+	seqNo = seqNo + 1 // library marker tpLink.tpl_prot_klap, line 199
+	if (device) { state.seqNo = seqNo } // library marker tpLink.tpl_prot_klap, line 200
+	Map encryptedData = klapEncrypt(cmd.getBytes(), encKey,  // library marker tpLink.tpl_prot_klap, line 201
+									encIv, encSig, seqNo) // library marker tpLink.tpl_prot_klap, line 202
+	Map reqParams = [ // library marker tpLink.tpl_prot_klap, line 203
+		uri: uri, // library marker tpLink.tpl_prot_klap, line 204
+		body: encryptedData.cipherData, // library marker tpLink.tpl_prot_klap, line 205
+		headers: ["Cookie": cookie, "Connection": "close"], // library marker tpLink.tpl_prot_klap, line 206
+		contentType: "application/octet-stream", // library marker tpLink.tpl_prot_klap, line 207
+		requestContentType: "application/octet-stream", // library marker tpLink.tpl_prot_klap, line 208
+		timeout: 5, // library marker tpLink.tpl_prot_klap, line 209
+		ignoreSSLIssues: true] // library marker tpLink.tpl_prot_klap, line 210
+	return reqParams // library marker tpLink.tpl_prot_klap, line 211
+} // library marker tpLink.tpl_prot_klap, line 212
 
-def parseKlapData(resp) { // library marker tpLink.tpl_prot_klap, line 211
-	Map parseData = [parseMethod: "parseKlapData"] // library marker tpLink.tpl_prot_klap, line 212
-	try { // library marker tpLink.tpl_prot_klap, line 213
-		byte[] keyBytes = new JsonSlurper().parseText(encKey) // library marker tpLink.tpl_prot_klap, line 214
-		byte[] ivBytes = new JsonSlurper().parseText(encIv) // library marker tpLink.tpl_prot_klap, line 215
-		int seqNo = state.seqNo // library marker tpLink.tpl_prot_klap, line 216
-		byte[] cipherResponse = resp.data.decodeBase64()[32..-1] // library marker tpLink.tpl_prot_klap, line 217
-		Map cmdResp =  new JsonSlurper().parseText( // library marker tpLink.tpl_prot_klap, line 218
-			klapDecrypt(cipherResponse, keyBytes, ivBytes, seqNo)) // library marker tpLink.tpl_prot_klap, line 219
-		parseData << [cryptoStatus: "OK", cmdResp: cmdResp] // library marker tpLink.tpl_prot_klap, line 220
-	} catch (err) { // library marker tpLink.tpl_prot_klap, line 221
-		parseData << [cryptoStatus: "decryptDataError", error: err] // library marker tpLink.tpl_prot_klap, line 222
-	} // library marker tpLink.tpl_prot_klap, line 223
-	return parseData // library marker tpLink.tpl_prot_klap, line 224
-} // library marker tpLink.tpl_prot_klap, line 225
+def parseKlapData(resp) { // library marker tpLink.tpl_prot_klap, line 214
+	Map parseData = [parseMethod: "parseKlapData"] // library marker tpLink.tpl_prot_klap, line 215
+	try { // library marker tpLink.tpl_prot_klap, line 216
+		byte[] keyBytes = new JsonSlurper().parseText(encKey) // library marker tpLink.tpl_prot_klap, line 217
+		byte[] ivBytes = new JsonSlurper().parseText(encIv) // library marker tpLink.tpl_prot_klap, line 218
+		int seqNo = state.seqNo // library marker tpLink.tpl_prot_klap, line 219
+		byte[] cipherResponse = resp.data.decodeBase64()[32..-1] // library marker tpLink.tpl_prot_klap, line 220
+		Map cmdResp =  new JsonSlurper().parseText( // library marker tpLink.tpl_prot_klap, line 221
+			klapDecrypt(cipherResponse, keyBytes, ivBytes, seqNo)) // library marker tpLink.tpl_prot_klap, line 222
+		parseData << [cryptoStatus: "OK", cmdResp: cmdResp] // library marker tpLink.tpl_prot_klap, line 223
+	} catch (err) { // library marker tpLink.tpl_prot_klap, line 224
+		parseData << [cryptoStatus: "decryptDataError", error: err] // library marker tpLink.tpl_prot_klap, line 225
+	} // library marker tpLink.tpl_prot_klap, line 226
+	return parseData // library marker tpLink.tpl_prot_klap, line 227
+} // library marker tpLink.tpl_prot_klap, line 228
 
-//	===== Encryption ===== // library marker tpLink.tpl_prot_klap, line 227
-def klapEncrypt(byte[] request, encKey, encIv, encSig, seqNo) { // library marker tpLink.tpl_prot_klap, line 228
-	byte[] encSeqNo = integerToByteArray(seqNo) // library marker tpLink.tpl_prot_klap, line 229
-	byte[] ivEnc = [encIv, encSeqNo].flatten() // library marker tpLink.tpl_prot_klap, line 230
-	def cipher = Cipher.getInstance("AES/CBC/PKCS5Padding") // library marker tpLink.tpl_prot_klap, line 231
-	SecretKeySpec key = new SecretKeySpec(encKey, "AES") // library marker tpLink.tpl_prot_klap, line 232
-	IvParameterSpec iv = new IvParameterSpec(ivEnc) // library marker tpLink.tpl_prot_klap, line 233
-	cipher.init(Cipher.ENCRYPT_MODE, key, iv) // library marker tpLink.tpl_prot_klap, line 234
-	byte[] cipherRequest = cipher.doFinal(request) // library marker tpLink.tpl_prot_klap, line 235
+//	===== Encryption ===== // library marker tpLink.tpl_prot_klap, line 230
+def klapEncrypt(byte[] request, encKey, encIv, encSig, seqNo) { // library marker tpLink.tpl_prot_klap, line 231
+	byte[] encSeqNo = integerToByteArray(seqNo) // library marker tpLink.tpl_prot_klap, line 232
+	byte[] ivEnc = [encIv, encSeqNo].flatten() // library marker tpLink.tpl_prot_klap, line 233
+	def cipher = Cipher.getInstance("AES/CBC/PKCS5Padding") // library marker tpLink.tpl_prot_klap, line 234
+	SecretKeySpec key = new SecretKeySpec(encKey, "AES") // library marker tpLink.tpl_prot_klap, line 235
+	IvParameterSpec iv = new IvParameterSpec(ivEnc) // library marker tpLink.tpl_prot_klap, line 236
+	cipher.init(Cipher.ENCRYPT_MODE, key, iv) // library marker tpLink.tpl_prot_klap, line 237
+	byte[] cipherRequest = cipher.doFinal(request) // library marker tpLink.tpl_prot_klap, line 238
 
-	byte[] payload = [encSig, encSeqNo, cipherRequest].flatten() // library marker tpLink.tpl_prot_klap, line 237
-	byte[] signature = mdEncode("SHA-256", payload) // library marker tpLink.tpl_prot_klap, line 238
-	cipherRequest = [signature, cipherRequest].flatten() // library marker tpLink.tpl_prot_klap, line 239
-	return [cipherData: cipherRequest, seqNumber: seqNo] // library marker tpLink.tpl_prot_klap, line 240
-} // library marker tpLink.tpl_prot_klap, line 241
+	byte[] payload = [encSig, encSeqNo, cipherRequest].flatten() // library marker tpLink.tpl_prot_klap, line 240
+	byte[] signature = mdEncode("SHA-256", payload) // library marker tpLink.tpl_prot_klap, line 241
+	cipherRequest = [signature, cipherRequest].flatten() // library marker tpLink.tpl_prot_klap, line 242
+	return [cipherData: cipherRequest, seqNumber: seqNo] // library marker tpLink.tpl_prot_klap, line 243
+} // library marker tpLink.tpl_prot_klap, line 244
 
-def klapDecrypt(cipherResponse, encKey, encIv, seqNo) { // library marker tpLink.tpl_prot_klap, line 243
-	byte[] encSeqNo = integerToByteArray(seqNo) // library marker tpLink.tpl_prot_klap, line 244
-	byte[] ivEnc = [encIv, encSeqNo].flatten() // library marker tpLink.tpl_prot_klap, line 245
-	def cipher = Cipher.getInstance("AES/CBC/PKCS5Padding") // library marker tpLink.tpl_prot_klap, line 246
-    SecretKeySpec key = new SecretKeySpec(encKey, "AES") // library marker tpLink.tpl_prot_klap, line 247
-	IvParameterSpec iv = new IvParameterSpec(ivEnc) // library marker tpLink.tpl_prot_klap, line 248
-    cipher.init(Cipher.DECRYPT_MODE, key, iv) // library marker tpLink.tpl_prot_klap, line 249
-	byte[] byteResponse = cipher.doFinal(cipherResponse) // library marker tpLink.tpl_prot_klap, line 250
-	return new String(byteResponse, "UTF-8") // library marker tpLink.tpl_prot_klap, line 251
-} // library marker tpLink.tpl_prot_klap, line 252
+def klapDecrypt(cipherResponse, encKey, encIv, seqNo) { // library marker tpLink.tpl_prot_klap, line 246
+	byte[] encSeqNo = integerToByteArray(seqNo) // library marker tpLink.tpl_prot_klap, line 247
+	byte[] ivEnc = [encIv, encSeqNo].flatten() // library marker tpLink.tpl_prot_klap, line 248
+	def cipher = Cipher.getInstance("AES/CBC/PKCS5Padding") // library marker tpLink.tpl_prot_klap, line 249
+    SecretKeySpec key = new SecretKeySpec(encKey, "AES") // library marker tpLink.tpl_prot_klap, line 250
+	IvParameterSpec iv = new IvParameterSpec(ivEnc) // library marker tpLink.tpl_prot_klap, line 251
+    cipher.init(Cipher.DECRYPT_MODE, key, iv) // library marker tpLink.tpl_prot_klap, line 252
+	byte[] byteResponse = cipher.doFinal(cipherResponse) // library marker tpLink.tpl_prot_klap, line 253
+	return new String(byteResponse, "UTF-8") // library marker tpLink.tpl_prot_klap, line 254
+} // library marker tpLink.tpl_prot_klap, line 255
 
 // ~~~~~ end include (1081) tpLink.tpl_prot_klap ~~~~~
 
